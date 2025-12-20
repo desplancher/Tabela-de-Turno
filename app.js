@@ -22,7 +22,13 @@ const MA_SHIFT_CYCLE = ['F', 'F', 'F', 'F', '0', '0', '8', '8', '16', '16'];
 const MA_TEAM_OFFSETS = { A: 0, B: 4, C: 8, D: 6, E: 2 };
 
 // --- Utilitários ---
-function toISODate(date) { return date.toISOString().split('T')[0]; }
+function toISODate(date) {
+    const year = date.getFullYear();
+    // getMonth() começa em 0, por isso +1. padStart garante "05" em vez de "5"
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+}
 function formatCurrency(val) { return val.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }); }
 function diffDays(d1, d2) { return Math.floor((d2 - d1) / (1000 * 60 * 60 * 24)); }
 

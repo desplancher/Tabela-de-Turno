@@ -156,7 +156,17 @@ tbody tr:hover {
     color: var(--puma-16-color);
 }
 
+.puma-header {
+    background-color: #004D40;
+}
 
+.ma-header {
+    background-color: #1B5E20;
+}
+
+.compare-header {
+    background-color: #3e2723;
+}
 /* Container principal: alinha os grupos e o botão em linha */
 .compare-controls {
     display: flex;
@@ -167,7 +177,6 @@ tbody tr:hover {
     background-color: #fff;
     border-radius: 8px;
     border: 1px solid var(--border-color);
-    flex-wrap: wrap;
 }
 
 /* Cada grupo (Tabela 1 e Tabela 2) */
@@ -193,4 +202,3 @@ tbody tr:hover {
     font-weight: 600;
     color: #4b5563;
 }
-    
