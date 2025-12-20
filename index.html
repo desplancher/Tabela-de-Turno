@@ -4,43 +4,43 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tabelas de Turnos</title>
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
     <link rel="stylesheet" href="styles.css">
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#1B5E20">
     <link rel="apple-touch-icon" href="icon-192.png">
     <link rel="icon" type="image/png" href="icon-192.png">
 </head>
+
 <body>
 
     <div class="container" id="home-view">
-        <!-- Navegar entre as Tabelas -->
+
         <div class="tab-container">
             <button class="tab-button" onclick="openTab(event, 'puma')">Turno PUMA</button>
             <button class="tab-button" onclick="openTab(event, 'monte-alegre')">Turno Monte Alegre</button>
             <button class="tab-button" onclick="openTab(event, 'comparar')">Comparar</button>
         </div>
 
-
-        <!-- Controles de Data -->
         <div class="controls-header">
-            <div>
+            <div style="flex: 2; display: flex; gap: 5px;">
                 <select class="controls-select" id="globalMonth" onchange="jumpToDate()"></select>
                 <select class="controls-select" id="globalYear" onchange="jumpToDate()"></select>
-                <button class="controls-button" onclick="jumpToDate()">Ir</button>
             </div>
 
-            <div>
-                <button class="controls-button" onclick="changeMonth(-1)">&#9664; Anterior</button>
-                <button class="controls-button" onclick="goToToday()">Hoje</button>
-                <button class="controls-button" onclick="changeMonth(1)">Próximo &#9654;</button>
+            <div style="flex: 1; display: flex; justify-content: flex-end;">
+                <button class="controls-button" onclick="goToToday()" style="width: 100%; font-weight: bold;">
+                    📍 Hoje
+                </button>
             </div>
         </div>
 
         <div id="puma" class="tab-content">
-            <h2 class="puma-header">Tabela Turno PUMA</h2>
+            <h2 class="puma-header">Tabela PUMA</h2>
             <div class="table-container">
                 <table>
                     <thead>
@@ -54,13 +54,14 @@
                             <th>E</th>
                         </tr>
                     </thead>
-                    <tbody id="puma-table-body"></tbody>
+                    <tbody id="puma-table-body">
+                    </tbody>
                 </table>
             </div>
         </div>
 
         <div id="monte-alegre" class="tab-content">
-            <h2 class="ma-header">Tabela Turno Monte Alegre</h2>
+            <h2 class="ma-header">Tabela Monte Alegre</h2>
             <div class="table-container">
                 <table>
                     <thead>
@@ -74,17 +75,16 @@
                             <th>E</th>
                         </tr>
                     </thead>
-                    <tbody id="ma-table-body"></tbody>
+                    <tbody id="ma-table-body">
+                    </tbody>
                 </table>
             </div>
         </div>
 
         <div id="comparar" class="tab-content">
-
             <h2 class="compare-header">Comparar Escalas</h2>
 
             <div class="compare-controls" onchange="renderTableCompare()">
-
                 <div class="compare-group">
                     <div class="field-item">
                         <label for="compareTabela1">Tabela 1:</label>
@@ -107,6 +107,7 @@
                     </div>
                 </div>
             </div>
+
             <div class="table-container">
                 <table>
                     <thead>
@@ -117,7 +118,8 @@
                             <th>Fonte 2</th>
                         </tr>
                     </thead>
-                    <tbody id="compare-table-body"></tbody>
+                    <tbody id="compare-table-body">
+                    </tbody>
                 </table>
             </div>
         </div>
@@ -155,6 +157,7 @@
     <script src="app.js"></script>
 
     <script>
+        // Registro do Service Worker (PWA)
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('./sw.js')

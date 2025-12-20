@@ -1,21 +1,29 @@
 :root {
+    /* Cores Gerais */
     --bg-color: #f4f7f6;
     --text-color: #1f2937;
     --border-color: #ddd;
+    /* Cores de Cabeçalho e Texto */
     --header-bg: #1B5E20;
     --header-text: #C8E6C9;
     --table-header-bg: #333;
     --table-header-text: #f0f0f0;
+    /* Cores da Tabela */
     --stripe-color: #f9f9f9;
     --weekend-color: #d9534f;
     --holiday-color: #d9534f;
+    /* Cores dos Turnos (PUMA) */
     --puma-f-color: #00B050;
     --puma-0-color: #0070C0;
     --puma-8-color: #E36C0A;
     --puma-16-color: #5A2D82;
 }
 
-* { box-sizing: border-box; margin: 0; padding: 0; }
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
 
 body {
     font-family: 'Inter', sans-serif;
@@ -24,16 +32,18 @@ body {
     display: flex;
     justify-content: center;
     padding: 20px;
+    padding-bottom: 80px; /* Espaço para o menu inferior */
 }
 
 h2 {
-    padding: 16px;
+    padding: 12px;
     text-align: center;
     color: var(--header-text);
     text-transform: uppercase;
 }
 
-/*============== Navegação entre telas ====================*/
+/* --- LAYOUT E NAVEGAÇÃO SUPERIOR --- */
+
 .container {
     width: 100%;
     max-width: 950px;
@@ -42,10 +52,12 @@ h2 {
     box-shadow: 0 4px 6px rgba(0,0,0,0.1);
     overflow: hidden;
 }
-.tab-container { 
-    display: flex; 
-    background-color: #e5e7eb; 
+
+.tab-container {
+    display: flex;
+    background-color: #e5e7eb;
 }
+
 .tab-button {
     flex: 1;
     padding: 14px;
@@ -55,23 +67,24 @@ h2 {
     color: #4b5563;
     font-weight: 500;
 }
-.tab-button.active {
-    background: #fff;
-    color: #111827;
-    border-bottom: 3px solid var(--header-bg);
-}
+
+    .tab-button.active {
+        background: #fff;
+        color: #111827;
+        border-bottom: 3px solid var(--header-bg);
+    }
+
 .tab-content {
     display: none;
     padding-bottom: 20px;
 }
-.tab-content.active {
-    display: block;
-}
 
+    .tab-content.active {
+        display: block;
+    }
 
+/* --- CONTROLES (DATA/SELECTS) --- */
 
-
-/*============== Controles de Data ====================*/
 .controls-header {
     display: flex;
     justify-content: space-between;
@@ -81,7 +94,9 @@ h2 {
     flex-wrap: wrap;
     gap: 10px;
 }
-.controls-select, .controls-button {
+
+.controls-select,
+.controls-button {
     box-sizing: border-box;
     vertical-align: middle;
     height: 40px;
@@ -93,20 +108,21 @@ h2 {
     line-height: 1;
 }
 
-.controls-button:hover {
-    background-color: #C2C2C2;
-}
-.controls-button:active {
-    background-color: #A1A1A1;
-}
+    .controls-button:hover {
+        background-color: #C2C2C2;
+    }
 
+    .controls-button:active {
+        background-color: #A1A1A1;
+    }
 
+/* --- ESTRUTURA DA TABELA --- */
 
-
-/*============== Tabela de Dados (Turno) ====================*/
 .table-container {
-    overflow-x: auto;
-    border-top: 1px solid #ddd;
+    overflow-y: auto;
+    overflow-x: hidden;
+    height: calc(100vh - 220px);
+    scroll-behavior: smooth;
 }
 
 table {
@@ -117,13 +133,8 @@ table {
 }
 
 th, td {
-    border: 1px solid #ccc;
+    border: 2px solid #ccc;
     padding: 10px;
-}
-
-thead th {
-    background: var(--table-header-bg);
-    color: var(--table-header-text);
 }
 
 tbody tr:nth-child(even) {
@@ -134,6 +145,43 @@ tbody tr:hover {
     background: #f0f9ff;
     cursor: pointer;
 }
+
+/* --- CABEÇALHOS E RODAPÉS FIXOS (STICKY) --- */
+
+thead th,
+tfoot th {
+    position: sticky;
+    z-index: 50;
+    background-color: var(--table-header-bg);
+    color: var(--table-header-text);
+    border: none; /* Remove borda nativa para evitar bugs de scroll */
+    transform: translateZ(10); /* Força renderização em camada separada */
+    background-clip: padding-box;
+}
+
+thead th {
+    top: 0;
+}
+
+tfoot th {
+    bottom: 0;
+}
+
+    /* Borda Falsa (Pseudo-elemento) para corrigir visual */
+    thead th::after,
+    tfoot th::after {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        border: 1px solid #ccc; /* Ajuste aqui a cor/espessura da borda fixa */
+        z-index: 100;
+        pointer-events: none;
+    }
+
+/* --- ESTILOS DE TEXTO E CORES ESPECÍFICAS --- */
 
 .dia-sab, .dia-dom, .dia-feriado {
     color: var(--weekend-color);
@@ -167,10 +215,23 @@ tbody tr:hover {
 .compare-header {
     background-color: #3e2723;
 }
-/* Container principal: alinha os grupos e o botão em linha */
+
+.month-separator td {
+    background-color: #eceff1;
+    color: #37474f;
+    font-weight: 800;
+    text-align: left;
+    padding: 15px 10px;
+    text-transform: uppercase;
+    border-top: 2px solid #cfd8dc;
+    font-size: 0.9rem;
+}
+
+/* --- TELA DE COMPARAÇÃO --- */
+
 .compare-controls {
     display: flex;
-    align-items: flex-end; /* Alinha o botão pela base dos selects */
+    align-items: flex-end;
     flex-wrap: wrap;
     gap: 15px;
     padding: 10px;
@@ -179,7 +240,6 @@ tbody tr:hover {
     border: 1px solid var(--border-color);
 }
 
-/* Cada grupo (Tabela 1 e Tabela 2) */
 .compare-group {
     flex: 1;
     display: flex;
@@ -189,7 +249,6 @@ tbody tr:hover {
     border-radius: 8px;
 }
 
-/* Container interno para Label em cima do Select */
 .field-item {
     flex: 1;
     display: flex;
@@ -197,17 +256,14 @@ tbody tr:hover {
     gap: 5px;
 }
 
-.field-item label {
-    font-size: 0.8rem;
-    font-weight: 600;
-    color: #4b5563;
-}
+    .field-item label {
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: #4b5563;
+    }
 
-body {
-    padding-bottom: 80px;
-}
+/* --- MENU INFERIOR FIXO --- */
 
-/* --- Menu Inferior Fixo --- */
 .bottom-nav {
     position: fixed;
     bottom: 0;
@@ -230,7 +286,7 @@ body {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    color: #9ca3af; /* Cinza desativado */
+    color: #9ca3af;
     font-size: 0.75rem;
     font-weight: 500;
     cursor: pointer;
@@ -239,7 +295,7 @@ body {
 }
 
     .nav-item.active {
-        color: var(--header-bg); /* Verde do seu tema */
+        color: var(--header-bg);
     }
 
 .nav-icon {
@@ -247,9 +303,10 @@ body {
     margin-bottom: 2px;
 }
 
-/* --- Estilo do Botão de Reset --- */
+/* --- BOTÕES E ANIMAÇÕES --- */
+
 .btn-reset {
-    background-color: #d32f2f; /* Vermelho Alerta */
+    background-color: #d32f2f;
     color: white;
     border: none;
     padding: 15px 20px;
@@ -267,63 +324,73 @@ body {
         transform: scale(0.98);
     }
 
-@media (max-width: 768px) {
-
-    /* 1. Aproveitar mais a tela */
-    body {
-        padding: 10px; /* Reduz a margem lateral de 20px para 10px */
-        padding-bottom: 80px; /* Garante espaço para o menu inferior não cobrir conteúdo */
+@keyframes flash-row {
+    0% {
+        background-color: #ffeb3b;
     }
 
-    /* 2. Ajuste dos Títulos */
+    100% {
+        background-color: inherit;
+    }
+}
+
+.highlight-flash {
+    animation: flash-row 2s ease-out;
+}
+
+/* --- RESPONSIVIDADE (MOBILE) --- */
+
+@media (max-width: 768px) {
+    body {
+        padding: 10px;
+        padding-bottom: 80px;
+    }
+
     h2 {
-        font-size: 1.2rem; /* Diminui um pouco a fonte dos títulos */
+        font-size: 1.2rem;
         padding: 12px;
     }
 
-    /* 3. Botões e Selects mais fáceis de tocar */
     .controls-header {
-        flex-direction: column; /* Empilha os controles de data verticalmente */
-        align-items: stretch; /* Faz os botões ocuparem 100% da largura */
+        flex-direction: column;
+        align-items: stretch;
     }
 
         .controls-header > div {
             display: flex;
             gap: 10px;
-            justify-content: space-between; /* Distribui botões "Anterior/Próximo" */
+            justify-content: space-between;
         }
 
-    .controls-select, .controls-button {
-        flex: 1; /* Faz os botões crescerem para preencher o espaço */
-        min-width: 0; /* Evita que travem o layout */
-        font-size: 16px; /* Evita zoom automático no iPhone ao clicar */
+    .controls-select,
+    .controls-button {
+        flex: 1;
+        min-width: 0;
+        font-size: 16px;
     }
 
-    /* 4. Tabela mais compacta */
     th, td {
-        padding: 8px 4px; /* Menos espaço dentro das células */
-        font-size: 0.85rem; /* Fonte um pouco menor na tabela */
+        padding: 8px 4px;
+        font-size: 0.85rem;
     }
 
-    /* Ajuste para não quebrar o cabeçalho da tabela */
     th {
         font-size: 0.75rem;
         text-transform: uppercase;
         letter-spacing: 0.5px;
     }
 
-    /* 5. Ajuste dos controles de comparação */
     .compare-controls {
-        flex-direction: column; /* Um grupo em cima do outro */
+        flex-direction: column;
         align-items: stretch;
     }
 
     .compare-group {
-        width: 100%; /* Grupo ocupa largura total */
+        width: 100%;
     }
 
     #compareButton {
-        width: 100%; /* Botão comparar gigante para facilitar o toque */
+        width: 100%;
         margin-top: 10px;
         padding: 12px;
     }

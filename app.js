@@ -62,37 +62,61 @@ function getMaShift(d, t) {
 
 const SHIFT_FUNCTIONS = { 'puma': getPumaShift, 'ma': getMaShift };
 
-// --- Renderização de Tabelas ---
+// --- Renderização de Tabelas (AGORA ANUAL) ---
 function renderTable(body, fn, teams) {
-    if (!body) return; body.innerHTML = '';
-    const y = globalCurrentDate.getFullYear(), m = globalCurrentDate.getMonth();
-    const last = new Date(y, m + 1, 0).getDate();
+    if (!body) return;
+    body.innerHTML = '';
 
-    for (let i = 1; i <= last; i++) {
-        const d = new Date(y, m, i); const iso = toISODate(d);
-        const tr = document.createElement('tr'); 
-        const hol = isHoliday(d); const w = d.getDay();
+    // Pega o ano selecionado (ignora o mês para renderizar, faz o ano todo)
+    const y = globalCurrentDate.getFullYear();
+    const colSpan = teams.length + 2; // Calcula colunas para a linha do mês
 
-        let html = `<td class="${hol ? 'dia-feriado' : (w == 0 || w == 6 ? 'dia-dom' : '')} ">${d.toLocaleDateString('pt-BR')}</td>`;
-        html += `<td class="${hol ? 'dia-feriado' : (w == 0 || w == 6 ? 'dia-dom' : '')}">${DAY_NAMES[w]}</td>`;
+    // Loop de 0 (Janeiro) a 11 (Dezembro)
+    for (let m = 0; m < 12; m++) {
 
-        // CORREÇÃO: Lógica para diferenciar modo normal e modo comparação
-        teams.forEach(t => {
-            let s;
-            if (typeof t === 'object') {
-                // Modo Comparação: t é {tabela: 'puma', letra: 'A'}
-                const shiftFn = SHIFT_FUNCTIONS[t.tabela];
-                s = shiftFn(d, t.letra);
-            } else {
-                // Modo Normal: t é apenas a letra 'A', 'B', etc.
-                s = fn(d, t);
+        // 1. Cria a linha separadora do Mês
+        const trMonth = document.createElement('tr');
+        trMonth.className = 'month-separator';
+        trMonth.innerHTML = `<td colspan="${colSpan}">${MONTH_NAMES[m]} ${y}</td>`;
+        body.appendChild(trMonth);
+
+        // 2. Loop dos dias desse mês
+        const lastDay = new Date(y, m + 1, 0).getDate();
+
+        for (let i = 1; i <= lastDay; i++) {
+            const d = new Date(y, m, i);
+            const iso = toISODate(d);
+            const w = d.getDay();
+            const hol = isHoliday(d);
+
+            const tr = document.createElement('tr');
+            // ADICIONA ID NA LINHA PARA PODERMOS ROLAR ATÉ ELA
+            tr.id = `date-${iso}`;
+
+            let html = `<td class="${hol ? 'dia-feriado' : (w == 0 || w == 6 ? 'dia-dom' : '')}">${d.toLocaleDateString('pt-BR')}</td>`;
+            html += `<td class="${hol ? 'dia-feriado' : (w == 0 || w == 6 ? 'dia-dom' : '')}">${DAY_NAMES[w]}</td>`;
+
+            teams.forEach(t => {
+                let s;
+                if (typeof t === 'object') {
+                    const shiftFn = SHIFT_FUNCTIONS[t.tabela];
+                    s = shiftFn(d, t.letra);
+                } else {
+                    s = fn(d, t);
+                }
+                html += `<td class="shift-${s.toLowerCase()}">${s}</td>`;
+            });
+
+            tr.innerHTML = html;
+
+            // Marca visualmente o dia de hoje
+            if (d.getTime() === TODAY.getTime()) {
+                tr.style.border = "2px solid #1B5E20";
+                tr.style.fontWeight = "bold";
             }
-            html += `<td class="shift-${s.toLowerCase()}">${s}</td>`;
-        });
 
-        tr.innerHTML = html;
-        if (d.getTime() === TODAY.getTime()) tr.style.background = "#e0f2f1";
-        body.appendChild(tr);
+            body.appendChild(tr);
+        }
     }
 }
 
@@ -141,11 +165,53 @@ function openTab(e, nm) {
     if (nm === 'comparar') renderTableCompare();
 }
 
-function changeMonth(d) { globalCurrentDate.setMonth(globalCurrentDate.getMonth() + d); renderAll(); }
-function goToToday() { globalCurrentDate = new Date(TODAY); renderAll(); }
-function jumpToDate() {
-    globalCurrentDate = new Date(document.getElementById('globalYear').value, document.getElementById('globalMonth').value, 1);
+// --- Novas Funções de Navegação ---
+
+function scrollToDate(date) {
+    const iso = toISODate(date);
+    // Tenta encontrar a linha com o ID da data
+    const el = document.getElementById(`date-${iso}`);
+
+    if (el) {
+        // Rola suavemente até o elemento e o coloca no centro da tela
+        el.scrollIntoView({ behavior: "smooth", block: "center" });
+
+        // Adiciona o efeito de flash amarelo
+        el.classList.add('highlight-flash');
+        setTimeout(() => el.classList.remove('highlight-flash'), 2500);
+    }
+}
+
+function goToToday() {
+    // 1. Atualiza a data global para Hoje
+    globalCurrentDate = new Date(TODAY);
+
+    // 2. Atualiza os selects visualmente
+    updateSelectors();
+
+    // 3. Renderiza o ano atual (caso esteja em outro ano)
     renderAll();
+
+    // 4. Espera um pouquinho (100ms) para a tabela desenhar e rola até hoje
+    setTimeout(() => scrollToDate(TODAY), 100);
+}
+function jumpToDate() {
+    // Pega valores dos selects
+    const y = parseInt(document.getElementById('globalYear').value);
+    const m = parseInt(document.getElementById('globalMonth').value);
+
+    // Se mudou de ano, precisa renderizar tudo de novo
+    if (y !== globalCurrentDate.getFullYear()) {
+        globalCurrentDate.setFullYear(y);
+        renderAll();
+    }
+
+    // Se for o mesmo ano, apenas rola até o dia 1º do mês selecionado
+    // (Pequeno delay para garantir que o DOM existe)
+    setTimeout(() => {
+        const targetDate = new Date(y, m, 1);
+        scrollToDate(targetDate);
+    }, 100);
 }
 
 function updateSelectors() {
@@ -187,6 +253,10 @@ function init() {
         // Opcional: Você pode salvar a aba ativa no localStorage também se quiser futuramente
         btnPuma.click();
     }
+    // 6. Vai para hoje após meio segundo (para garantir que tudo carregou)
+    setTimeout(() => {
+        goToToday();
+    }, 500);
 }
 
 // --- Persistência de Dados (Salvar Escolhas) ---
