@@ -231,5 +231,52 @@ function loadSavedSettings() {
         globalCurrentDate.setFullYear(parseInt(savedY));
     }
 }
+// --- Navegação Inferior ---
+function switchView(viewName) {
+    const home = document.getElementById('home-view');
+    const settings = document.getElementById('settings-view');
+    const navButtons = document.querySelectorAll('.nav-item');
 
+    // 1. Esconde tudo
+    home.style.display = 'none';
+    settings.style.display = 'none';
+
+    // 2. Remove a classe 'active' dos botões
+    navButtons.forEach(btn => btn.classList.remove('active'));
+
+    // 3. Mostra a tela certa e ativa o botão certo
+    if (viewName === 'home') {
+        home.style.display = 'block';
+        navButtons[0].classList.add('active'); // Botão Início
+    } else {
+        settings.style.display = 'block';
+        navButtons[1].classList.add('active'); // Botão Ajustes
+    }
+}
+
+async function hardReset() {
+    if (!confirm("Isso vai apagar os dados salvos e baixar a versão mais nova do app. Continuar?")) return;
+
+    // 1. Remove o Service Worker (para parar de usar a versão velha)
+    if ('serviceWorker' in navigator) {
+        const registrations = await navigator.serviceWorker.getRegistrations();
+        for (const registration of registrations) {
+            await registration.unregister();
+        }
+    }
+
+    // 2. Apaga o Cache (arquivos antigos: html, css, js)
+    if ('caches' in window) {
+        const keys = await caches.keys();
+        for (const key of keys) {
+            await caches.delete(key);
+        }
+    }
+
+    // 3. Limpa o LocalStorage (suas configurações salvas)
+    localStorage.clear();
+
+    // 4. Recarrega a página forçando o download do servidor
+    window.location.reload(true);
+}
 window.onload = init;

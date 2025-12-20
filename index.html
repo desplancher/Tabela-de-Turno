@@ -15,7 +15,7 @@
 </head>
 <body>
 
-    <div class="container">
+    <div class="container" id="home-view">
         <!-- Navegar entre as Tabelas -->
         <div class="tab-container">
             <button class="tab-button" onclick="openTab(event, 'puma')">Turno PUMA</button>
@@ -122,6 +122,36 @@
             </div>
         </div>
     </div>
+
+    <div class="container" id="settings-view" style="display: none;">
+        <h2 style="background-color: #455A64;">Configurações</h2>
+
+        <div style="padding: 20px; text-align: center;">
+            <p style="color: #666; margin-bottom: 20px;">
+                Gerenciamento do Aplicativo
+            </p>
+
+            <button onclick="hardReset()" class="btn-reset">
+                ⚠️ Resetar e Atualizar App
+            </button>
+
+            <p style="font-size: 0.8rem; color: #999; margin-top: 30px;">
+                Versão 2.0.1
+            </p>
+        </div>
+    </div>
+
+    <nav class="bottom-nav">
+        <button class="nav-item active" onclick="switchView('home')">
+            <span class="nav-icon">🏠</span>
+            <span class="nav-text">Início</span>
+        </button>
+        <button class="nav-item" onclick="switchView('settings')">
+            <span class="nav-icon">⚙️</span>
+            <span class="nav-text">Ajustes</span>
+        </button>
+    </nav>
+
     <script src="app.js"></script>
 
     <script>
