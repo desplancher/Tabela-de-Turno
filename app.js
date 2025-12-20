@@ -176,7 +176,7 @@ function openEventModal(iso) {
 function closeEventModal() { document.getElementById('eventModalOverlay').style.display = 'none'; }
 
 function addEvent() {
-    const type = document.getElementById('eventType').value;
+    
     const start = document.getElementById('eventStartDate').value;
     const hours = parseFloat(document.getElementById('eventHours').value) || 0;
     if (type === 'horas-extras' && hours <= 0) { alert("Insira as horas!"); return; }
@@ -255,12 +255,9 @@ function init() {
 
     updateCompareLetras();
 
-    document.getElementById('addEventBtn').onclick = addEvent;
-    document.getElementById('closeModalBtn').onclick = closeEventModal;
-    document.getElementById('eventType').onchange = (e) => {
-        document.getElementById('hours-group').style.display = e.target.value === 'horas-extras' ? 'block' : 'none';
-        document.getElementById('duration-group').style.display = e.target.value === 'horas-extras' ? 'none' : 'block';
-    };
+ 
+    
+   
 
     document.getElementById('salarioBase').value = userSettings.salario;
     document.getElementById('diaFechamento').value = userSettings.diaFechamento;
