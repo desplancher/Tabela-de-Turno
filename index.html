@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tabelas de Turnos</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+    <div class="container">
+
+        <div class="tab-container">
+            <button class="tab-button" onclick="openTab(event, 'puma')">Turno PUMA</button>
+            <button class="tab-button" onclick="openTab(event, 'monte-alegre')">Turno Monte Alegre</button>
+            <button class="tab-button" onclick="openTab(event, 'comparar')">Comparar</button>
+            <!--  <button class="tab-button" onclick="openTab(event, 'financeiro')">Financeiro</button> -->
+        </div>
+
+        <div class="controls-header">
+            <div>
+                <select class="select-date" id="globalMonth" onchange="jumpToDate()"></select>
+                <select class="select-date" id="globalYear" onchange="jumpToDate()"></select>
+                <button class="select-date-button" onclick="jumpToDate()">Ir</button>
+            </div>
+
+            <div>
+                <button class="select-date-button" onclick="changeMonth(-1)">&#9664; Anterior</button>
+                <button class="select-date-button" onclick="goToToday()">Hoje</button>
+                <button class="select-date-button" onclick="changeMonth(1)">Próximo &#9654;</button>
+            </div>
+        </div>
+
+        <div id="puma" class="tab-content">
+            <h2 style="background-color: #004D40;">Tabela Turno PUMA</h2>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Data</th>
+                            <th>Dia</th>
+                            <th>A</th>
+                            <th>B</th>
+                            <th>C</th>
+                            <th>D</th>
+                            <th>E</th>
+                        </tr>
+                    </thead>
+                    <tbody id="puma-table-body"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="monte-alegre" class="tab-content">
+            <h2 style="background-color: #1B5E20;">Tabela Turno Monte Alegre</h2>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Data</th>
+                            <th>Dia</th>
+                            <th>A</th>
+                            <th>B</th>
+                            <th>C</th>
+                            <th>D</th>
+                            <th>E</th>
+                        </tr>
+                    </thead>
+                    <tbody id="ma-table-body"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="comparar" class="tab-content">
+            <h2 style="background-color: #3e2723;">Comparar Escalas</h2>
+            <div class="compare-controls">
+                <div class="compare-group">
+                    <label for="compareTabela1">Fonte 1</label>
+                    <select id="compareTabela1"></select>
+                    <select id="compareLetra1"></select>
+                </div>
+                <div class="compare-group">
+                    <label for="compareTabela2">Fonte 2</label>
+                    <select id="compareTabela2"></select>
+                    <select id="compareLetra2"></select>
+                </div>
+                <button id="compareButton" onclick="renderTableCompare()">Comparar</button>
+            </div>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Data</th>
+                            <th>Dia</th>
+                            <th>Fonte 1</th>
+                            <th>Fonte 2</th>
+                        </tr>
+                    </thead>
+                    <tbody id="compare-table-body"></tbody>
+                </table>
+            </div>
+        </div>
+
+
+        <div id="financeiro" class="tab-content">
+            <h2 style="background-color: #0d47a1;">Financeiro</h2>
+
+            <div class="finance-card">
+                <h3>Configurações</h3>
+                <div class="settings-grid">
+                    <div>
+                        <label for="salarioBase">Salário Base (R$):</label>
+                        <input type="number" id="salarioBase" min="0" step="0.01">
+                    </div>
+                    <div>
+                        <label for="diaFechamento">Dia de Fechamento (Ponto):</label>
+                        <input type="number" id="diaFechamento" min="1" max="31">
+                    </div>
+                    <div>
+                        <label for="horasMensais">Horas Mensais (p/ cálculo):</label>
+                        <input type="number" id="horasMensais" min="1">
+                    </div>
+                    <div>
+                        <label for="numDependentes">Nº de Dependentes (p/ IRRF):</label>
+                        <input type="number" id="numDependentes" min="0">
+                    </div>
+                    <div>
+                        <label for="minhaTabela">Minha Tabela:</label>
+                        <select id="minhaTabela"></select>
+                    </div>
+                    <div>
+                        <label for="minhaLetra">Minha Letra:</label>
+                        <select id="minhaLetra"></select>
+                    </div>
+                    <button onclick="saveSettings()">Salvar Configurações</button>
+                </div>
+            </div>
+
+            <div class="finance-card">
+                <h3>Resumo do Período</h3>
+                <div class="summary-content">
+                    <p>Período de Pagamento: <span id="periodoAtual"></span></p>
+                    <div class="manual-inputs-grid">
+                        <div>
+                            <label for="manualAN">Adic. Noturno (Horas):</label>
+                            <input type="number" id="manualAN" min="0" step="0.1" placeholder="Auto" onchange="saveManualHours()">
+                        </div>
+                        <div>
+                            <label for="manualHE70">H.E. 70% (Horas):</label>
+                            <input type="number" id="manualHE70" min="0" step="0.1" placeholder="Auto" onchange="saveManualHours()">
+                        </div>
+                        <div>
+                            <label for="manualHE100">H.E. 100% (Horas):</label>
+                            <input type="number" id="manualHE100" min="0" step="0.1" placeholder="Auto" onchange="saveManualHours()">
+                        </div>
+                    </div>
+                    <hr>
+                    <p>Salário Base: <span id="summarySalarioBase">R$ 0,00</span></p>
+                    <p>Valor da Hora: <span id="summaryValorHora">R$ 0,00</span></p>
+                    <p class="dsr-item">&nbsp;&nbsp;&nbsp;Valor H.E. 70%: <span id="summaryValorHE70_unit">R$ 0,00</span></p>
+                    <p class="dsr-item">&nbsp;&nbsp;&nbsp;Valor H.E. 100%: <span id="summaryValorHE100_unit">R$ 0,00</span></p>
+                    <p class="dsr-item last-unit-item">&nbsp;&nbsp;&nbsp;Valor Adic. Noturno (40%): <span id="summaryValorAdicNoturno_unit">R$ 0,00</span></p>
+
+                    <p>Adicional Noturno (Total): <span id="summaryAdicionalNoturno">0.0h = R$ 0,00</span></p>
+                    <p class="dsr-item">&nbsp;&nbsp;&nbsp;Dias de Turno '16' (x 2.42h): <span id="summaryCount16">0</span></p>
+                    <p class="dsr-item" style="border-bottom: 1px solid #f0f0f0;">&nbsp;&nbsp;&nbsp;Dias de Turno '0' (x 7.16h): <span id="summaryCount00">0</span></p>
+
+                    <p>Horas Extras (70%): <span id="summaryHE70">0.0h = R$ 0,00</span></p>
+                    <p>Horas Extras (100%): <span id="summaryHE100">0.0h = R$ 0,00</span></p>
+                    <p class="dsr-item">Reflexo DSR (Ad. Noturno): <span id="summaryDsrNoturno">R$ 0,00</span></p>
+                    <p class="dsr-item">Reflexo DSR (H.E.): <span id="summaryDsrHE">R$ 0,00</span></p>
+                    <p class="total-bruto">Total Bruto: <span id="summaryTotalBruto">R$ 0,00</span></p>
+                    <hr>
+                    <p class="total-descontos">Desconto INSS: <span id="summaryINSS">R$ 0,00</span></p>
+                    <p class="total-descontos">Desconto IRRF: <span id="summaryIRRF">R$ 0,00</span></p>
+                    <p class="total-liquido">Salário Líquido (Est.): <span id="summarySalarioLiquido">R$ 0,00</span></p>
+                </div>
+                <p class="summary-footer">*Cálculo do valor/hora baseado em <span id="horasBaseFooter">180</span> horas mensais.</p>
+            </div>
+        </div>
+
+
+    </div>
+    <!---->
+    <div id="eventModalOverlay" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Gerenciar Eventos</h3>
+                <span class="close-btn" id="closeModalBtn">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="modal-form">
+                    <div>
+                        <label for="eventType">Tipo de Evento:</label>
+                        <select id="eventType">
+                            <option value="ferias">Férias</option>
+                            <option value="horas-extras">Horas Extras</option>
+                            <option value="evento">Evento</option>
+                            <option value="outros">Outros</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="eventStartDate">Data de Início:</label>
+                        <input type="date" id="eventStartDate">
+                    </div>
+                    <div id="duration-group">
+                        <label for="eventDuration">Duração (dias):</label>
+                        <input type="number" id="eventDuration" min="1" value="1">
+                    </div>
+                    <div id="hours-group" style="display: none;">
+                        <label for="eventHours">Quantidade de Horas:</label>
+                        <input type="number" id="eventHours" step="0.5" min="0" value="0">
+                    </div>
+                    <div id="bonus-type-group" style="display: none;">
+                        <label for="eventBonusType">Tipo de Adicional:</label>
+                        <select id="eventBonusType">
+                            <option value="70">70% (Comum)</option>
+                            <option value="100">100% (Feriado)</option>
+                        </select>
+                    </div>
+                    <div class="full-width">
+                        <label for="eventDescription">Descrição (Opcional):</label>
+                        <input type="text" id="eventDescription" placeholder="Ex: Visita técnica...">
+                    </div>
+                    <button id="addEventBtn" class="full-width">Adicionar Evento</button>
+                </div>
+                <div class="event-list" id="eventListContainer"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
