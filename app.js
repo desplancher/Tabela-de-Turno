@@ -155,30 +155,83 @@ function updateSelectors() {
 
 // --- Inicialização ---
 function init() {
-  
-
+    // 1. Preenche os Selects de Data
     const mSel = document.getElementById('globalMonth');
     MONTH_NAMES.forEach((n, i) => mSel.add(new Option(n, i)));
+
     const ySel = document.getElementById('globalYear');
     for (let y = 2024; y <= 2030; y++) ySel.add(new Option(y, y));
 
- 
-
+    // 2. Preenche os Selects de Comparação
     const cTab1 = document.getElementById('compareTabela1');
     const cTab2 = document.getElementById('compareTabela2');
     [cTab1, cTab2].forEach(s => {
         s.add(new Option('Turno PUMA', 'puma'));
         s.add(new Option('Turno Monte Alegre', 'ma'));
-
-
     });
 
+    // 3. Garante que as letras (A, B, C...) existam antes de tentar carregar valores
     updateCompareLetras();
+
+    // === NOVO: Carrega as configurações salvas ===
+    loadSavedSettings();
+    setupAutoSave();
+    // =============================================
+
+    // 4. Renderiza tudo com os dados carregados
     renderAll();
 
+    // Atualiza visualmente os seletores de data caso a data tenha mudado no loadSavedSettings
+    updateSelectors();
+
+    // Botão inicial (mantido do seu código original)
     const btnPuma = document.querySelector('button[onclick*="puma"]');
     if (btnPuma) {
+        // Opcional: Você pode salvar a aba ativa no localStorage também se quiser futuramente
         btnPuma.click();
+    }
+}
+
+// --- Persistência de Dados (Salvar Escolhas) ---
+const STORAGE_KEYS = [
+    'globalMonth',
+    'globalYear',
+    'compareTabela1',
+    'compareLetra1',
+    'compareTabela2',
+    'compareLetra2'
+];
+
+function setupAutoSave() {
+    STORAGE_KEYS.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+            // Toda vez que mudar, salva no localStorage
+            el.addEventListener('change', () => {
+                localStorage.setItem(id, el.value);
+            });
+        }
+    });
+}
+
+function loadSavedSettings() {
+    STORAGE_KEYS.forEach(id => {
+        const savedValue = localStorage.getItem(id);
+        const el = document.getElementById(id);
+        // Se existir valor salvo e o elemento existir na tela, aplica o valor
+        if (savedValue && el) {
+            el.value = savedValue;
+        }
+    });
+
+    // Ajusta a data global para bater com o que foi recuperado dos selects
+    const savedM = localStorage.getItem('globalMonth');
+    const savedY = localStorage.getItem('globalYear');
+
+    if (savedM !== null && savedY !== null) {
+        // Atualiza a variável principal de data com o que foi salvo
+        globalCurrentDate.setMonth(parseInt(savedM));
+        globalCurrentDate.setFullYear(parseInt(savedY));
     }
 }
 
