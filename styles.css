@@ -266,3 +266,65 @@ body {
         background-color: #b71c1c;
         transform: scale(0.98);
     }
+
+@media (max-width: 768px) {
+
+    /* 1. Aproveitar mais a tela */
+    body {
+        padding: 10px; /* Reduz a margem lateral de 20px para 10px */
+        padding-bottom: 80px; /* Garante espaço para o menu inferior não cobrir conteúdo */
+    }
+
+    /* 2. Ajuste dos Títulos */
+    h2 {
+        font-size: 1.2rem; /* Diminui um pouco a fonte dos títulos */
+        padding: 12px;
+    }
+
+    /* 3. Botões e Selects mais fáceis de tocar */
+    .controls-header {
+        flex-direction: column; /* Empilha os controles de data verticalmente */
+        align-items: stretch; /* Faz os botões ocuparem 100% da largura */
+    }
+
+        .controls-header > div {
+            display: flex;
+            gap: 10px;
+            justify-content: space-between; /* Distribui botões "Anterior/Próximo" */
+        }
+
+    .controls-select, .controls-button {
+        flex: 1; /* Faz os botões crescerem para preencher o espaço */
+        min-width: 0; /* Evita que travem o layout */
+        font-size: 16px; /* Evita zoom automático no iPhone ao clicar */
+    }
+
+    /* 4. Tabela mais compacta */
+    th, td {
+        padding: 8px 4px; /* Menos espaço dentro das células */
+        font-size: 0.85rem; /* Fonte um pouco menor na tabela */
+    }
+
+    /* Ajuste para não quebrar o cabeçalho da tabela */
+    th {
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    /* 5. Ajuste dos controles de comparação */
+    .compare-controls {
+        flex-direction: column; /* Um grupo em cima do outro */
+        align-items: stretch;
+    }
+
+    .compare-group {
+        width: 100%; /* Grupo ocupa largura total */
+    }
+
+    #compareButton {
+        width: 100%; /* Botão comparar gigante para facilitar o toque */
+        margin-top: 10px;
+        padding: 12px;
+    }
+}
