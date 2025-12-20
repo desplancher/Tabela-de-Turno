@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tabela-turnos-v1';
+const CACHE_NAME = 'tabela-turnos-v2';
 const ASSETS = [
     './',
     './index.html',
