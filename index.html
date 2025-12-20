@@ -12,24 +12,26 @@
 <body>
 
     <div class="container">
-
+        <!-- Navegar entre as Tabelas -->
         <div class="tab-container">
             <button class="tab-button" onclick="openTab(event, 'puma')">Turno PUMA</button>
             <button class="tab-button" onclick="openTab(event, 'monte-alegre')">Turno Monte Alegre</button>
             <button class="tab-button" onclick="openTab(event, 'comparar')">Comparar</button>
         </div>
 
+
+        <!-- Controles de Data -->
         <div class="controls-header">
             <div>
-                <select class="select-date" id="globalMonth" onchange="jumpToDate()"></select>
-                <select class="select-date" id="globalYear" onchange="jumpToDate()"></select>
-                <button class="select-date-button" onclick="jumpToDate()">Ir</button>
+                <select class="controls-select" id="globalMonth" onchange="jumpToDate()"></select>
+                <select class="controls-select" id="globalYear" onchange="jumpToDate()"></select>
+                <button class="controls-button" onclick="jumpToDate()">Ir</button>
             </div>
 
             <div>
-                <button class="select-date-button" onclick="changeMonth(-1)">&#9664; Anterior</button>
-                <button class="select-date-button" onclick="goToToday()">Hoje</button>
-                <button class="select-date-button" onclick="changeMonth(1)">Próximo &#9654;</button>
+                <button class="controls-button" onclick="changeMonth(-1)">&#9664; Anterior</button>
+                <button class="controls-button" onclick="goToToday()">Hoje</button>
+                <button class="controls-button" onclick="changeMonth(1)">Próximo &#9654;</button>
             </div>
         </div>
 
@@ -74,19 +76,32 @@
         </div>
 
         <div id="comparar" class="tab-content">
+
             <h2 style="background-color: #3e2723;">Comparar Escalas</h2>
-            <div class="compare-controls">
+
+            <div class="compare-controls" onchange="renderTableCompare()">
+
                 <div class="compare-group">
-                    <label for="compareTabela1">Fonte 1</label>
-                    <select id="compareTabela1"></select>
-                    <select id="compareLetra1"></select>
+                    <div class="field-item">
+                        <label for="compareTabela1">Tabela 1:</label>
+                        <select class="controls-select" id="compareTabela1"></select>
+                    </div>
+                    <div class="field-item">
+                        <label for="compareLetra1">Letra:</label>
+                        <select class="controls-select" id="compareLetra1"></select>
+                    </div>
                 </div>
+
                 <div class="compare-group">
-                    <label for="compareTabela2">Fonte 2</label>
-                    <select id="compareTabela2"></select>
-                    <select id="compareLetra2"></select>
+                    <div class="field-item">
+                        <label for="compareTabela2">Tabela 2:</label>
+                        <select class="controls-select" id="compareTabela2"></select>
+                    </div>
+                    <div class="field-item">
+                        <label for="compareLetra2">Letra:</label>
+                        <select class="controls-select" id="compareLetra2"></select>
+                    </div>
                 </div>
-                <button id="compareButton" onclick="renderTableCompare()">Comparar</button>
             </div>
             <div class="table-container">
                 <table>

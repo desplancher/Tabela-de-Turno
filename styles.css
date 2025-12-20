@@ -81,24 +81,22 @@ h2 {
     flex-wrap: wrap;
     gap: 10px;
 }
-.select-date {
-    width: 120px;
+.controls-select, .controls-button {
+    box-sizing: border-box;
+    vertical-align: middle;
+    height: 40px;
     padding: 10px;
-    border: none;
+    border: 1px solid #ccc;
     border-radius: 4px;
     background-color: #f1f1f1;
+    min-width: 120px;
+    line-height: 1;
 }
-.select-date-button {
-    width: 120px;
-    padding: 10px;
-    border: none;
-    border-radius: 4px;
-    background-color: #f1f1f1;
-}
-.select-date-button:hover {
+
+.controls-button:hover {
     background-color: #C2C2C2;
 }
-.select-date-button:active {
+.controls-button:active {
     background-color: #A1A1A1;
 }
 
@@ -159,5 +157,40 @@ tbody tr:hover {
 }
 
 
+/* Container principal: alinha os grupos e o botão em linha */
+.compare-controls {
+    display: flex;
+    align-items: flex-end; /* Alinha o botão pela base dos selects */
+    flex-wrap: wrap;
+    gap: 15px;
+    padding: 10px;
+    background-color: #fff;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    flex-wrap: wrap;
+}
 
+/* Cada grupo (Tabela 1 e Tabela 2) */
+.compare-group {
+    flex: 1;
+    display: flex;
+    gap: 10px;
+    background: #f9f9f9;
+    padding: 12px;
+    border-radius: 8px;
+}
 
+/* Container interno para Label em cima do Select */
+.field-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.field-item label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #4b5563;
+}
+    
