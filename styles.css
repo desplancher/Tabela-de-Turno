@@ -32,11 +32,11 @@ body {
     display: flex;
     justify-content: center;
     padding: 20px;
-    padding-bottom: 80px; /* Espaço para o menu inferior */
+    padding-bottom: 50px; /* Espaço para o menu inferior */
 }
 
 h2 {
-    padding: 12px;
+    padding: 5px;
     text-align: center;
     color: var(--header-text);
     text-transform: uppercase;
@@ -76,7 +76,7 @@ h2 {
 
 .tab-content {
     display: none;
-    padding-bottom: 20px;
+    padding-bottom: 5px;
 }
 
     .tab-content.active {
@@ -88,7 +88,7 @@ h2 {
 .controls-header {
     display: flex;
     justify-content: space-between;
-    padding: 16px;
+    padding: 5px;
     background: #fdfdfd;
     border-bottom: 1px solid #ddd;
     flex-wrap: wrap;
@@ -100,11 +100,11 @@ h2 {
     box-sizing: border-box;
     vertical-align: middle;
     height: 40px;
-    padding: 10px;
+    padding: 5px;
     border: 1px solid #ccc;
     border-radius: 4px;
     background-color: #f1f1f1;
-    min-width: 120px;
+   
     line-height: 1;
 }
 
@@ -133,7 +133,7 @@ table {
 }
 
 th, td {
-    border: 2px solid #ccc;
+    border: 1px solid #ccc;
     padding: 10px;
 }
 
@@ -148,8 +148,7 @@ tbody tr:hover {
 
 /* --- CABEÇALHOS E RODAPÉS FIXOS (STICKY) --- */
 
-thead th,
-tfoot th {
+thead th {
     position: sticky;
     z-index: 50;
     background-color: var(--table-header-bg);
@@ -163,13 +162,8 @@ thead th {
     top: 0;
 }
 
-tfoot th {
-    bottom: 0;
-}
-
     /* Borda Falsa (Pseudo-elemento) para corrigir visual */
-    thead th::after,
-    tfoot th::after {
+    thead th::after{
         content: "";
         position: absolute;
         top: 0;
@@ -221,7 +215,7 @@ tfoot th {
     color: #37474f;
     font-weight: 800;
     text-align: left;
-    padding: 15px 10px;
+    padding: 10px 10px;
     text-transform: uppercase;
     border-top: 2px solid #cfd8dc;
     font-size: 0.9rem;
@@ -234,7 +228,7 @@ tfoot th {
     align-items: flex-end;
     flex-wrap: wrap;
     gap: 15px;
-    padding: 10px;
+    padding: 5px;
     background-color: #fff;
     border-radius: 8px;
     border: 1px solid var(--border-color);
@@ -245,7 +239,7 @@ tfoot th {
     display: flex;
     gap: 10px;
     background: #f9f9f9;
-    padding: 12px;
+    padding: 2px;
     border-radius: 8px;
 }
 
@@ -253,7 +247,7 @@ tfoot th {
     flex: 1;
     display: flex;
     flex-direction: column;
-    gap: 5px;
+    gap: 2px;
 }
 
     .field-item label {
@@ -348,50 +342,56 @@ tfoot th {
 
     h2 {
         font-size: 1.2rem;
-        padding: 12px;
+        padding: 5px;
     }
 
-    .controls-header {
-        flex-direction: column;
-        align-items: stretch;
+    .tab-button {
+        padding: 3px;
     }
-
-        .controls-header > div {
-            display: flex;
-            gap: 10px;
-            justify-content: space-between;
+        .controls-header {
+            flex-direction: column;
+            align-items: stretch;
+            padding: 3px;
         }
+
+            .controls-header > div {
+                display: flex;
+                gap: 10px;
+                justify-content: space-between;
+
+            }
 
     .controls-select,
     .controls-button {
         flex: 1;
         min-width: 0;
         font-size: 16px;
+        padding: 3px;
     }
 
-    th, td {
-        padding: 8px 4px;
-        font-size: 0.85rem;
-    }
+        th, td {
+            padding: 8px 4px;
+            font-size: 0.85rem;
+        }
 
-    th {
-        font-size: 0.75rem;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-    }
+        th {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
 
-    .compare-controls {
-        flex-direction: column;
-        align-items: stretch;
-    }
+        .compare-controls {
+            flex-direction: column;
+            align-items: stretch;
+        }
 
-    .compare-group {
-        width: 100%;
-    }
+        .compare-group {
+            width: 100%;
+        }
 
-    #compareButton {
-        width: 100%;
-        margin-top: 10px;
-        padding: 12px;
+        #compareButton {
+            width: 100%;
+            margin-top: 10px;
+            padding: 12px;
+        }
     }
-}
