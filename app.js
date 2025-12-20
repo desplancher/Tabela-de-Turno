@@ -155,14 +155,14 @@ function updateSelectors() {
 
 // --- Inicialização ---
 function init() {
-    // 1. Preenche os Selects de Data
+    // 1. Cria as opções de Mês e Ano
     const mSel = document.getElementById('globalMonth');
     MONTH_NAMES.forEach((n, i) => mSel.add(new Option(n, i)));
 
     const ySel = document.getElementById('globalYear');
     for (let y = 2024; y <= 2030; y++) ySel.add(new Option(y, y));
 
-    // 2. Preenche os Selects de Comparação
+    // 2. Cria as opções de Tabelas (PUMA/Monte Alegre)
     const cTab1 = document.getElementById('compareTabela1');
     const cTab2 = document.getElementById('compareTabela2');
     [cTab1, cTab2].forEach(s => {
@@ -170,18 +170,15 @@ function init() {
         s.add(new Option('Turno Monte Alegre', 'ma'));
     });
 
-    // 3. Garante que as letras (A, B, C...) existam antes de tentar carregar valores
+    // 3. CRÍTICO: Cria as letras (A, B, C...) ANTES de carregar os dados
     updateCompareLetras();
 
-    // === NOVO: Carrega as configurações salvas ===
+    // 4. AGORA carrega os dados salvos (porque as opções já existem)
     loadSavedSettings();
     setupAutoSave();
-    // =============================================
 
-    // 4. Renderiza tudo com os dados carregados
+    // 5. Renderiza a tela final
     renderAll();
-
-    // Atualiza visualmente os seletores de data caso a data tenha mudado no loadSavedSettings
     updateSelectors();
 
     // Botão inicial (mantido do seu código original)
