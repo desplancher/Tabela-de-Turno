@@ -232,29 +232,4 @@ function loadSavedSettings() {
     }
 }
 
-async function hardReset() {
-    if (!confirm("Isso vai apagar os dados salvos e baixar a versão mais nova do app. Continuar?")) return;
-
-    // 1. Remove o Service Worker (para parar de usar a versão velha)
-    if ('serviceWorker' in navigator) {
-        const registrations = await navigator.serviceWorker.getRegistrations();
-        for (const registration of registrations) {
-            await registration.unregister();
-        }
-    }
-
-    // 2. Apaga o Cache (arquivos antigos: html, css, js)
-    if ('caches' in window) {
-        const keys = await caches.keys();
-        for (const key of keys) {
-            await caches.delete(key);
-        }
-    }
-
-    // 3. Limpa o LocalStorage (suas configurações salvas)
-    localStorage.clear();
-
-    // 4. Recarrega a página forçando o download do servidor
-    window.location.reload(true);
-}
 window.onload = init;
