@@ -4,8 +4,8 @@ const DAY_NAMES = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
 const TODAY = new Date(); TODAY.setHours(0, 0, 0, 0);
 
 let globalCurrentDate = new Date();
-let calendarEvents = [];
-let userSettings = { salario: 0, diaFechamento: 10, horasMensais: 180, dependentes: 0, minhaTabela: 'puma', minhaLetra: 'A' };
+
+
 let holidayCache = {};
 
 const PUMA_ANCHOR_DATE = new Date(2025, 0, 1);
@@ -64,10 +64,10 @@ function renderTable(body, fn, teams) {
 
     for (let i = 1; i <= last; i++) {
         const d = new Date(y, m, i); const iso = toISODate(d);
-        const tr = document.createElement('tr'); tr.onclick = () => openEventModal(iso);
+        const tr = document.createElement('tr'); 
         const hol = isHoliday(d); const w = d.getDay();
 
-        let html = `<td class="${hol ? 'dia-feriado' : (w == 0 || w == 6 ? 'dia-dom' : '')} ${getEventClass(iso)}">${d.toLocaleDateString('pt-BR')}</td>`;
+        let html = `<td class="${hol ? 'dia-feriado' : (w == 0 || w == 6 ? 'dia-dom' : '')} ">${d.toLocaleDateString('pt-BR')}</td>`;
         html += `<td class="${hol ? 'dia-feriado' : (w == 0 || w == 6 ? 'dia-dom' : '')}">${DAY_NAMES[w]}</td>`;
 
         // CORREÇÃO: Lógica para diferenciar modo normal e modo comparação
@@ -122,90 +122,8 @@ function renderAll() {
     if (document.getElementById('comparar').classList.contains('active')) {
         renderTableCompare();
     }
-    renderFinancial();
-    updateSelectors();
-}
-
-// --- Financeiro ---
-function saveManualHours() {
-    const key = `man_${globalCurrentDate.getFullYear()}_${globalCurrentDate.getMonth()}`;
-    const data = {
-        an: document.getElementById('manualAN').value,
-        h70: document.getElementById('manualHE70').value,
-        h100: document.getElementById('manualHE100').value
-    };
-    localStorage.setItem(key, JSON.stringify(data));
-    renderFinancial();
-}
-
-function renderFinancial() {
-    const key = `man_${globalCurrentDate.getFullYear()}_${globalCurrentDate.getMonth()}`;
-    const stored = JSON.parse(localStorage.getItem(key) || '{"an":"","h70":"","h100":""}');
-    document.getElementById('manualAN').value = stored.an;
-    document.getElementById('manualHE70').value = stored.h70;
-    document.getElementById('manualHE100').value = stored.h100;
-
-    const sal = userSettings.salario;
-    const hrBase = userSettings.horasMensais || 180;
-    const vHr = hrBase > 0 ? sal / hrBase : 0;
-
-    document.getElementById('summarySalarioBase').textContent = formatCurrency(sal);
-    document.getElementById('summaryValorHora').textContent = formatCurrency(vHr);
-    document.getElementById('summarySalarioLiquido').textContent = formatCurrency(sal * 0.85);
-}
-
-function saveSettings() {
-    userSettings = {
-        salario: parseFloat(document.getElementById('salarioBase').value) || 0,
-        diaFechamento: parseInt(document.getElementById('diaFechamento').value) || 10,
-        horasMensais: parseInt(document.getElementById('horasMensais').value) || 180,
-        dependentes: parseInt(document.getElementById('numDependentes').value) || 0,
-        minhaTabela: document.getElementById('minhaTabela').value,
-        minhaLetra: document.getElementById('minhaLetra').value
-    };
-    localStorage.setItem('set_turnos', JSON.stringify(userSettings));
-    renderFinancial();
-}
-
-// --- Eventos ---
-function openEventModal(iso) {
-    document.getElementById('eventStartDate').value = iso;
-    renderEventList(iso);
-    document.getElementById('eventModalOverlay').style.display = 'flex';
-}
-function closeEventModal() { document.getElementById('eventModalOverlay').style.display = 'none'; }
-
-function addEvent() {
     
-    const start = document.getElementById('eventStartDate').value;
-    const hours = parseFloat(document.getElementById('eventHours').value) || 0;
-    if (type === 'horas-extras' && hours <= 0) { alert("Insira as horas!"); return; }
-    calendarEvents.push({ id: Date.now(), type, start, hours });
-    localStorage.setItem('ev_turnos', JSON.stringify(calendarEvents));
-    renderAll();
-    closeEventModal();
-}
-
-function getEventClass(iso) {
-    const ev = calendarEvents.find(e => e.start === iso);
-    return ev ? `event-${ev.type}` : '';
-}
-
-function renderEventList(iso) {
-    const cont = document.getElementById('eventListContainer');
-    cont.innerHTML = '<h4>Eventos:</h4>';
-    calendarEvents.filter(e => e.start === iso).forEach(e => {
-        cont.innerHTML += `<div style="padding:5px; margin:5px 0; background:#eee; border-radius:4px; display:flex; justify-content:space-between; align-items:center;">
-            <span>${e.type} ${e.hours > 0 ? '(' + e.hours + 'h)' : ''}</span>
-            <button onclick="removeEvent(${e.id}, '${iso}')" style="background:red; color:white; border:none; padding:2px 8px; border-radius:4px; cursor:pointer;">X</button>
-        </div>`;
-    });
-}
-
-function removeEvent(id, iso) {
-    calendarEvents = calendarEvents.filter(e => e.id !== id);
-    localStorage.setItem('ev_turnos', JSON.stringify(calendarEvents));
-    renderAll(); renderEventList(iso);
+    updateSelectors();
 }
 
 // --- Abas e Navegação ---
@@ -231,18 +149,14 @@ function updateSelectors() {
 
 // --- Inicialização ---
 function init() {
-    const sets = localStorage.getItem('set_turnos'); if (sets) userSettings = JSON.parse(sets);
-    const evs = localStorage.getItem('ev_turnos'); if (evs) calendarEvents = JSON.parse(evs);
+  
 
     const mSel = document.getElementById('globalMonth');
     MONTH_NAMES.forEach((n, i) => mSel.add(new Option(n, i)));
     const ySel = document.getElementById('globalYear');
     for (let y = 2024; y <= 2030; y++) ySel.add(new Option(y, y));
 
-    const tSel = document.getElementById('minhaTabela');
-    tSel.add(new Option('Turno PUMA', 'puma')); tSel.add(new Option('Turno Monte Alegre', 'ma'));
-    const lSel = document.getElementById('minhaLetra');
-    ['A', 'B', 'C', 'D', 'E'].forEach(l => lSel.add(new Option(l, l)));
+ 
 
     const cTab1 = document.getElementById('compareTabela1');
     const cTab2 = document.getElementById('compareTabela2');
@@ -254,17 +168,6 @@ function init() {
     });
 
     updateCompareLetras();
-
- 
-    
-   
-
-    document.getElementById('salarioBase').value = userSettings.salario;
-    document.getElementById('diaFechamento').value = userSettings.diaFechamento;
-    document.getElementById('horasMensais').value = userSettings.horasMensais;
-    document.getElementById('minhaTabela').value = userSettings.minhaTabela;
-    document.getElementById('minhaLetra').value = userSettings.minhaLetra;
-
     renderAll();
 
     const btnPuma = document.querySelector('button[onclick*="puma"]');

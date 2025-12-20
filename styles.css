@@ -13,10 +13,6 @@
     --puma-0-color: #0070C0;
     --puma-8-color: #E36C0A;
     --puma-16-color: #5A2D82;
-    --event-ferias: #fef9c3;
-    --event-horas-extras: #dbeafe;
-    --event-evento: #dcfce7;
-    --event-outros: #e9d5ff;
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
