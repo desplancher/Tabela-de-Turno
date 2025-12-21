@@ -8,13 +8,6 @@ const TODAY = new Date(); TODAY.setHours(0, 0, 0, 0);
 let globalCurrentDate = new Date();
 let holidayCache = {};
 
-// Controle de anos carregados para cada tabela (Rolagem Infinita)
-const loadedYears = {
-    'puma': { min: 0, max: 0 },
-    'ma': { min: 0, max: 0 },
-    'compare': { min: 0, max: 0 }
-};
-
 // Dados da Tabela PUMA
 const PUMA_ANCHOR_DATE = new Date(2025, 0, 1);
 const PUMA_CYCLES = {
@@ -25,6 +18,7 @@ const PUMA_CYCLES = {
     E: ['0', '8', '8', 'F', 'F', 'F', 'F', '16', '16', 'F', '0', '0', '0', '8', '8', 'F', 'F', 'F', 'F', '16', '16', 'F', '0', '0', '8', '8', '8', 'F', 'F', 'F', '16', '16', '16', 'F', '0']
 };
 
+// Dados da Tabela Monte Alegre
 const MA_ANCHOR_DATE = new Date(2025, 2, 15);
 const MA_SHIFT_CYCLE = ['F', 'F', 'F', 'F', '0', '0', '8', '8', '16', '16'];
 const MA_TEAM_OFFSETS = { A: 0, B: 4, C: 8, D: 6, E: 2 };
@@ -77,23 +71,25 @@ function getMaShift(d, t) {
 const SHIFT_FUNCTIONS = { 'puma': getPumaShift, 'ma': getMaShift };
 
 // ============================================================================
-// 3. RENDERIZAÇÃO DAS TABELAS (CORE - Rolagem Infinita)
+// 3. RENDERIZAÇÃO DAS TABELAS
 // ============================================================================
 
-// Gera o fragmento de um ano específico (sem limpar o body)
-function createYearFragment(year, fn, teams, prefix) {
-    const fragment = document.createDocumentFragment();
+function renderTable(body, fn, teams, prefix) {
+    if (!body) return;
+    body.innerHTML = '';
+
+    const y = globalCurrentDate.getFullYear();
     const colSpan = teams.length + 2;
 
     for (let m = 0; m < 12; m++) {
         const trMonth = document.createElement('tr');
         trMonth.className = 'month-separator';
-        trMonth.innerHTML = `<td colspan="${colSpan}">${MONTH_NAMES[m]} ${year}</td>`;
-        fragment.appendChild(trMonth);
+        trMonth.innerHTML = `<td colspan="${colSpan}">${MONTH_NAMES[m]} ${y}</td>`;
+        body.appendChild(trMonth);
 
-        const lastDay = new Date(year, m + 1, 0).getDate();
+        const lastDay = new Date(y, m + 1, 0).getDate();
         for (let i = 1; i <= lastDay; i++) {
-            const d = new Date(year, m, i);
+            const d = new Date(y, m, i);
             const iso = toISODate(d);
             const w = d.getDay();
             const hol = isHoliday(d);
@@ -121,29 +117,14 @@ function createYearFragment(year, fn, teams, prefix) {
                 tr.style.border = "2px solid #1B5E20";
                 tr.style.fontWeight = "bold";
             }
-            fragment.appendChild(tr);
+            body.appendChild(tr);
         }
     }
-    return fragment;
-}
-
-// Inicializa ou Reseta a tabela para o ano atual
-function renderTableInitial(tbodyId, fn, teams, prefix, stateKey) {
-    const body = document.getElementById(tbodyId);
-    if (!body) return;
-
-    body.innerHTML = ''; // Limpa tudo
-
-    // Carrega o ano atual
-    const currentYear = globalCurrentDate.getFullYear();
-    const fragment = createYearFragment(currentYear, fn, teams, prefix);
-    body.appendChild(fragment);
-
-    // Reseta o estado da rolagem infinita
-    loadedYears[stateKey] = { min: currentYear, max: currentYear };
 }
 
 function renderTableCompare() {
+    // --- LÓGICA DO MODAL ---
+    // Pega os valores dos selects dentro do modal
     const t1 = document.getElementById('compareTabela1').value;
     const l1 = document.getElementById('compareLetra1').value;
     const t2 = document.getElementById('compareTabela2').value;
@@ -153,64 +134,25 @@ function renderTableCompare() {
         { tabela: t1, letra: l1 },
         { tabela: t2, letra: l2 }
     ];
-
-    renderTableInitial('compare-table-body', null, comparisonSources, 'compare', 'compare');
+    renderTable(document.getElementById('compare-table-body'), null, comparisonSources, 'compare');
 }
 
 function renderAll() {
-    renderTableInitial('puma-table-body', getPumaShift, ['A', 'B', 'C', 'D', 'E'], 'puma', 'puma');
-    renderTableInitial('ma-table-body', getMaShift, ['A', 'B', 'C', 'D', 'E'], 'ma', 'ma');
+    renderTable(document.getElementById('puma-table-body'), getPumaShift, ['A', 'B', 'C', 'D', 'E'], 'puma');
+    renderTable(document.getElementById('ma-table-body'), getMaShift, ['A', 'B', 'C', 'D', 'E'], 'ma');
 
+    // Se a aba comparar estiver ativa, renderiza ela também
     if (document.getElementById('comparar').classList.contains('active')) {
         renderTableCompare();
     }
     updateSelectors();
 }
 
-// Funções para adicionar anos dinamicamente
-function appendNextYear(tbodyId, fn, teams, prefix, stateKey) {
-    const state = loadedYears[stateKey];
-    const nextYear = state.max + 1;
-    const body = document.getElementById(tbodyId);
-
-    const fragment = createYearFragment(nextYear, fn, teams, prefix);
-    body.appendChild(fragment);
-
-    state.max = nextYear;
-    // console.log(`Carregou ${nextYear} para ${stateKey}`);
-}
-
-function prependPrevYear(tbodyId, fn, teams, prefix, stateKey, container) {
-    const state = loadedYears[stateKey];
-    const prevYear = state.min - 1;
-    const body = document.getElementById(tbodyId);
-
-    // Salva a altura antes de inserir para ajustar o scroll
-    const oldHeight = body.scrollHeight;
-
-    const fragment = createYearFragment(prevYear, fn, teams, prefix);
-    body.insertBefore(fragment, body.firstChild);
-
-    // Ajusta o scroll para o usuário não perder a posição
-    // Se não fizer isso, a tabela "pula" para o topo
-    // Como a tabela está dentro do container, usamos a diferença de altura do body ou container
-    // Nota: O scroll está no .table-container, mas o conteúdo cresceu dentro dele.
-
-    // Precisamos esperar o render para pegar a nova altura correta?
-    // Sincronamente funciona na maioria dos navegadores modernos.
-    const newHeight = body.scrollHeight;
-    if (container) {
-        container.scrollTop += (newHeight - oldHeight);
-    }
-
-    state.min = prevYear;
-    // console.log(`Carregou ${prevYear} para ${stateKey}`);
-}
-
 // ============================================================================
-// 4. LÓGICA DO NOVO CALENDÁRIO VISUAL (MODAL) - COM FIX DO GRID
+// 4. MODAIS (DATA E CONFIGURAÇÃO)
 // ============================================================================
 
+// --- Modal de Data ---
 let calViewDate = new Date();
 let calSelectedDate = new Date();
 let calMode = 'days';
@@ -228,6 +170,17 @@ function closeDateModal() {
     document.getElementById('date-modal').style.display = 'none';
 }
 
+// --- NOVO: Modal de Comparação (AQUI ESTAVA FALTANDO) ---
+function openCompareModal() {
+    document.getElementById('compare-modal').style.display = 'flex';
+}
+
+function closeCompareModal() {
+    document.getElementById('compare-modal').style.display = 'none';
+    renderTableCompare(); // Atualiza a tabela ao fechar o modal
+}
+
+// --- Lógica do Calendário ---
 function renderCalendar() {
     const titleMonth = document.getElementById('calTitleMonth');
     const titleYear = document.getElementById('calTitleYear');
@@ -257,7 +210,6 @@ function renderDaysGrid(container) {
     const firstDay = new Date(y, m, 1).getDay();
     const daysInMonth = new Date(y, m + 1, 0).getDate();
 
-    // Sempre preenchemos o início para alinhar o dia da semana
     for (let i = 0; i < firstDay; i++) {
         const div = document.createElement('div');
         div.className = 'calendar-day empty';
@@ -284,8 +236,6 @@ function renderDaysGrid(container) {
         };
         container.appendChild(div);
     }
-
-    // O CSS grid-template-rows: repeat(6, 1fr) garante o tamanho fixo
 }
 
 function renderMonthsGrid(container) {
@@ -352,7 +302,7 @@ function confirmDate() {
 }
 
 // ============================================================================
-// 5. NAVEGAÇÃO E INTERFACE (SCROLL, ABAS, MENU)
+// 5. NAVEGAÇÃO E INTERFACE
 // ============================================================================
 
 function getVisibleDateIso() {
@@ -442,14 +392,14 @@ function updateTabSlider() {
     }
 }
 
+// Troca de Aba
 function openTab(e, nm) {
     const currentIso = getVisibleDateIso();
 
     document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
     document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
 
-    const targetTab = document.getElementById(nm);
-    targetTab.classList.add('active');
+    document.getElementById(nm).classList.add('active');
 
     if (e && e.currentTarget) {
         e.currentTarget.classList.add('active');
@@ -460,7 +410,14 @@ function openTab(e, nm) {
 
     updateTabSlider();
 
-    if (nm === 'comparar') renderTableCompare();
+    // --- LÓGICA DO BOTÃO FAB DE COMPARAÇÃO ---
+    const fabCompare = document.getElementById('fab-compare');
+    if (nm === 'comparar') {
+        renderTableCompare();
+        if (fabCompare) fabCompare.style.display = 'flex'; // Mostra o botão
+    } else {
+        if (fabCompare) fabCompare.style.display = 'none'; // Esconde o botão
+    }
 
     if (currentIso) {
         const [y, m, d] = currentIso.split('-').map(Number);
@@ -543,69 +500,11 @@ async function hardReset() {
     window.location.reload(true);
 }
 
-// ============================================================================
-// 7. SETUP DA ROLAGEM INFINITA
-// ============================================================================
-
-function setupInfiniteScroll() {
-    const containers = document.querySelectorAll('.table-container');
-
-    containers.forEach(container => {
-        container.addEventListener('scroll', () => {
-            // Verifica qual tabela está nesse container
-            // O container é filho da div.tab-content, que tem o ID da tabela
-            const tabId = container.parentElement.id;
-            let key = '';
-            if (tabId === 'puma') key = 'puma';
-            else if (tabId === 'monte-alegre') key = 'ma';
-            else if (tabId === 'comparar') key = 'compare';
-
-            if (!key) return;
-
-            const { scrollTop, scrollHeight, clientHeight } = container;
-            const threshold = 400; // Pixels de distância para carregar
-
-            // Rolando para BAIXO -> Carregar Próximo Ano
-            if (scrollTop + clientHeight >= scrollHeight - threshold) {
-                if (key === 'compare') {
-                    // Para comparar, precisamos ler os selects atuais
-                    const t1 = document.getElementById('compareTabela1').value;
-                    const l1 = document.getElementById('compareLetra1').value;
-                    const t2 = document.getElementById('compareTabela2').value;
-                    const l2 = document.getElementById('compareLetra2').value;
-                    const sources = [{ tabela: t1, letra: l1 }, { tabela: t2, letra: l2 }];
-                    appendNextYear('compare-table-body', null, sources, 'compare', 'compare');
-                } else if (key === 'puma') {
-                    appendNextYear('puma-table-body', getPumaShift, ['A', 'B', 'C', 'D', 'E'], 'puma', 'puma');
-                } else if (key === 'ma') {
-                    appendNextYear('ma-table-body', getMaShift, ['A', 'B', 'C', 'D', 'E'], 'ma', 'ma');
-                }
-            }
-
-            // Rolando para CIMA -> Carregar Ano Anterior
-            if (scrollTop <= threshold) {
-                if (key === 'compare') {
-                    const t1 = document.getElementById('compareTabela1').value;
-                    const l1 = document.getElementById('compareLetra1').value;
-                    const t2 = document.getElementById('compareTabela2').value;
-                    const l2 = document.getElementById('compareLetra2').value;
-                    const sources = [{ tabela: t1, letra: l1 }, { tabela: t2, letra: l2 }];
-                    prependPrevYear('compare-table-body', null, sources, 'compare', 'compare', container);
-                } else if (key === 'puma') {
-                    prependPrevYear('puma-table-body', getPumaShift, ['A', 'B', 'C', 'D', 'E'], 'puma', 'puma', container);
-                } else if (key === 'ma') {
-                    prependPrevYear('ma-table-body', getMaShift, ['A', 'B', 'C', 'D', 'E'], 'ma', 'ma', container);
-                }
-            }
-        });
-    });
-}
-
 // --- FUNÇÃO MAIN ---
 function init() {
+    // Esses selects antigos podem não existir mais no HTML, então verificamos
     const mSel = document.getElementById('globalMonth');
     const ySel = document.getElementById('globalYear');
-
     if (mSel && ySel) {
         MONTH_NAMES.forEach((n, i) => mSel.add(new Option(n, i)));
         for (let y = 2024; y <= 2030; y++) ySel.add(new Option(y, y));
@@ -624,9 +523,6 @@ function init() {
 
     renderAll();
     updateSelectors();
-
-    // Inicia os ouvintes de rolagem infinita
-    setupInfiniteScroll();
 
     const btnPuma = document.querySelector('button[onclick*="puma"]');
     if (btnPuma) btnPuma.click();
