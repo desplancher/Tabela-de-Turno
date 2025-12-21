@@ -129,6 +129,7 @@ h2 {
     flex: 1;
     overflow-y: auto;
     overflow-x: hidden;
+    overflow-anchor: none;
 }
 
 table {
@@ -709,3 +710,4 @@ thead th {
         padding: 12px;
     }
 }
+

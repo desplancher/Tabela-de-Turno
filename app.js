@@ -74,22 +74,37 @@ const SHIFT_FUNCTIONS = { 'puma': getPumaShift, 'ma': getMaShift };
 // 3. RENDERIZAÇÃO DAS TABELAS
 // ============================================================================
 
+let lastRenderedYear = new Date().getFullYear();
+let firstRenderedYear = new Date().getFullYear();
+let isLoadingMore = false;
+
+// Função Principal de Renderização (Limpa e inicia)
 function renderTable(body, fn, teams, prefix) {
     if (!body) return;
     body.innerHTML = '';
 
-    const y = globalCurrentDate.getFullYear();
+    // Reseta os limites
+    lastRenderedYear = globalCurrentDate.getFullYear();
+    firstRenderedYear = lastRenderedYear;
+
+    // Renderiza o ano inicial
+    const frag = createYearFragment(lastRenderedYear, fn, teams, prefix);
+    body.appendChild(frag);
+}
+
+function createYearFragment(year, fn, teams, prefix) {
+    const fragment = document.createDocumentFragment();
     const colSpan = teams.length + 2;
 
     for (let m = 0; m < 12; m++) {
         const trMonth = document.createElement('tr');
         trMonth.className = 'month-separator';
-        trMonth.innerHTML = `<td colspan="${colSpan}">${MONTH_NAMES[m]} ${y}</td>`;
-        body.appendChild(trMonth);
+        trMonth.innerHTML = `<td colspan="${colSpan}">${MONTH_NAMES[m]} ${year}</td>`;
+        fragment.appendChild(trMonth);
 
-        const lastDay = new Date(y, m + 1, 0).getDate();
+        const lastDay = new Date(year, m + 1, 0).getDate();
         for (let i = 1; i <= lastDay; i++) {
-            const d = new Date(y, m, i);
+            const d = new Date(year, m, i);
             const iso = toISODate(d);
             const w = d.getDay();
             const hol = isHoliday(d);
@@ -117,10 +132,101 @@ function renderTable(body, fn, teams, prefix) {
                 tr.style.border = "2px solid #1B5E20";
                 tr.style.fontWeight = "bold";
             }
-            body.appendChild(tr);
+            fragment.appendChild(tr);
         }
     }
+    return fragment;
 }
+
+// Nova Função: Apenas cria as linhas de um ano e adiciona ao final
+function appendYearToTable(year, body, fn, teams, prefix) {
+    const frag = createYearFragment(year, fn, teams, prefix);
+    body.appendChild(frag);
+}
+
+// Anexa ano passado (Início da tabela)
+function prependYearToTable(year, body, fn, teams, prefix, container) {
+    // 1. Salva a altura e a posição atual exata
+    const oldHeight = container.scrollHeight;
+    const oldScrollTop = container.scrollTop;
+
+    // 2. Cria e insere o novo ano no topo
+    const frag = createYearFragment(year, fn, teams, prefix);
+    body.insertBefore(frag, body.firstChild);
+
+    // 3. Calcula a diferença de altura criada pelo novo conteúdo
+    const newHeight = container.scrollHeight;
+    const heightDifference = newHeight - oldHeight;
+
+    // 4. Ajusta a rolagem: Posição Antiga + Altura do Novo Conteúdo
+    container.scrollTop = oldScrollTop + heightDifference;
+}
+
+function setupInfiniteScroll() {
+    const containers = document.querySelectorAll('.table-container');
+
+    containers.forEach(container => {
+        container.addEventListener('scroll', () => {
+            if (isLoadingMore) return;
+
+            // Detecta fim da página (Futuro)
+            const scrollBottom = container.scrollHeight - container.scrollTop - container.clientHeight;
+            if (scrollBottom < 600) { // Aumentei um pouco a margem
+                loadYear('next', container);
+            }
+
+            // Detecta topo da página (Passado)
+            if (container.scrollTop < 600) {
+                loadYear('prev', container);
+            }
+        });
+    });
+}
+
+function loadYear(direction, container) {
+    isLoadingMore = true;
+
+    // Identifica parâmetros baseados na aba ativa
+    const activeTab = document.querySelector('.tab-content.active');
+    let targetBody, fn, teams, prefix;
+
+    if (activeTab.id === 'puma') {
+        targetBody = document.getElementById('puma-table-body');
+        fn = getPumaShift;
+        teams = ['A', 'B', 'C', 'D', 'E'];
+        prefix = 'puma';
+    } else if (activeTab.id === 'monte-alegre') {
+        targetBody = document.getElementById('ma-table-body');
+        fn = getMaShift;
+        teams = ['A', 'B', 'C', 'D', 'E'];
+        prefix = 'ma';
+    } else if (activeTab.id === 'comparar') {
+        targetBody = document.getElementById('compare-table-body');
+        const t1 = document.getElementById('compareTabela1').value;
+        const l1 = document.getElementById('compareLetra1').value;
+        const t2 = document.getElementById('compareTabela2').value;
+        const l2 = document.getElementById('compareLetra2').value;
+
+        fn = null; // Comparação usa lógica interna
+        teams = [{ tabela: t1, letra: l1 }, { tabela: t2, letra: l2 }];
+        prefix = 'compare';
+    }
+
+    if (direction === 'next') {
+        lastRenderedYear++;
+        appendYearToTable(lastRenderedYear, targetBody, fn, teams, prefix);
+    } else {
+        firstRenderedYear--;
+        // Passamos o container também para fazer o cálculo de scroll
+        prependYearToTable(firstRenderedYear, targetBody, fn, teams, prefix, container);
+    }
+
+    // Delay para evitar disparos múltiplos
+    setTimeout(() => {
+        isLoadingMore = false;
+    }, 100);
+}
+
 
 function renderTableCompare() {
     // --- LÓGICA DO MODAL ---
@@ -523,6 +629,7 @@ function init() {
 
     renderAll();
     updateSelectors();
+    setupInfiniteScroll();
 
     const btnPuma = document.querySelector('button[onclick*="puma"]');
     if (btnPuma) btnPuma.click();
@@ -534,5 +641,7 @@ function init() {
 
     window.addEventListener('resize', updateTabSlider);
 }
+
+
 
 window.onload = init;
