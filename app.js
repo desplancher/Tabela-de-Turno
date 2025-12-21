@@ -487,11 +487,26 @@ function scrollToDate(date, highlight = true) {
 
     const el = document.getElementById(`${prefix}-date-${iso}`);
 
-    if (el) {
-        el.scrollIntoView({ behavior: "auto", block: "center" });
+    // Pegamos o container que tem a barra de rolagem
+    const container = activeTab.querySelector('.table-container');
+
+    if (el && container) {
+        // --- CÁLCULO MANUAL (Substitui o scrollIntoView) ---
+        // Pega a posição da linha (offsetTop)
+        // Subtrai metade da altura da tela (container.clientHeight / 2)
+        // Soma metade da altura da linha (el.clientHeight / 2) para centralizar perfeito
+        const scrollPosition = el.offsetTop - (container.clientHeight / 2) + (el.clientHeight / 2);
+
+        // Aplica o scroll instantaneamente
+        container.scrollTop = scrollPosition;
 
         if (highlight) {
+            // Se for para destacar, remove a classe antiga e adiciona novamente para reiniciar animação
+            el.classList.remove('highlight-flash');
+            void el.offsetWidth; // Truque para reiniciar animação CSS
             el.classList.add('highlight-flash');
+
+            // Remove a classe depois de 2.5s
             setTimeout(() => el.classList.remove('highlight-flash'), 2500);
         }
     }
@@ -538,35 +553,119 @@ function updateTabSlider() {
 
 // Troca de Aba
 function openTab(e, nm) {
-    const currentIso = getVisibleDateIso();
+    // 1. ANTES DE TROCAR: Captura a posição visual exata da aba ATUAL
+    const activeTab = document.querySelector('.tab-content.active');
+    let savedIso = null;
+    let savedOffset = 0;
 
+    if (activeTab) {
+        const container = activeTab.querySelector('.table-container');
+        if (container) {
+            const rows = container.querySelectorAll('tr[id*="date-"]');
+            for (let row of rows) {
+                const relativeTop = row.offsetTop - container.scrollTop;
+                // Pega a primeira linha que está visível na tela
+                if (relativeTop >= 0 && relativeTop < container.clientHeight) {
+                    const match = row.id.match(/date-(\d{4}-\d{2}-\d{2})/);
+                    if (match) {
+                        savedIso = match[1];
+                        savedOffset = relativeTop;
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    // 2. TROCA DE ABAS (Visual)
     document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
     document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
 
-    document.getElementById(nm).classList.add('active');
-
-    if (e && e.currentTarget) {
-        e.currentTarget.classList.add('active');
-    } else {
-        const btn = document.querySelector(`button[onclick*="'${nm}'"]`);
+    if (e && e.currentTarget) e.currentTarget.classList.add('active');
+    else {
+        const btnId = nm === 'puma' ? 'btn-puma' : (nm === 'monte-alegre' ? 'btn-ma' : 'btn-comparar');
+        const btn = document.getElementById(btnId);
         if (btn) btn.classList.add('active');
     }
 
+    const newTab = document.getElementById(nm);
+    newTab.classList.add('active');
     updateTabSlider();
 
-    // --- LÓGICA DO BOTÃO FAB DE COMPARAÇÃO ---
+    // Lógica do botão flutuante e Renderização Inicial da Comparação
     const fabCompare = document.getElementById('fab-compare');
     if (nm === 'comparar') {
-        renderTableCompare();
-        if (fabCompare) fabCompare.style.display = 'flex'; // Mostra o botão
+        // SÓ renderiza o padrão se NÃO tivermos uma data salva para sincronizar.
+        // Se tiver savedIso, deixamos a lógica de sincronização (passo 3) cuidar disso para não piscar a tela.
+        if (!savedIso) {
+            renderTableCompare();
+        }
+        if (fabCompare) fabCompare.style.display = 'flex';
     } else {
-        if (fabCompare) fabCompare.style.display = 'none'; // Esconde o botão
+        if (fabCompare) fabCompare.style.display = 'none';
     }
 
-    if (currentIso) {
-        const [y, m, d] = currentIso.split('-').map(Number);
-        const dateObj = new Date(y, m - 1, d);
-        scrollToDate(dateObj, false);
+    // 3. SINCRONIZAÇÃO INTELIGENTE (Agora funciona para TODAS as abas)
+    if (savedIso) {
+        const targetYear = parseInt(savedIso.split('-')[0]);
+
+        let prefix = '';
+        let targetBody = null;
+        let fn = null;
+        let teams = null;
+
+        // Configura as variáveis dependendo da aba de destino
+        if (nm === 'puma') {
+            prefix = 'puma';
+            targetBody = document.getElementById('puma-table-body');
+            fn = getPumaShift;
+            teams = ['A', 'B', 'C', 'D', 'E'];
+        } else if (nm === 'monte-alegre') {
+            prefix = 'ma';
+            targetBody = document.getElementById('ma-table-body');
+            fn = getMaShift;
+            teams = ['A', 'B', 'C', 'D', 'E'];
+        } else if (nm === 'comparar') {
+            // Configuração Especial para Comparar
+            prefix = 'compare';
+            targetBody = document.getElementById('compare-table-body');
+            fn = null; // Comparação não usa função única, usa o array de objetos
+
+            // Pega os valores atuais dos selects para montar a tabela correta
+            const t1 = document.getElementById('compareTabela1').value;
+            const l1 = document.getElementById('compareLetra1').value;
+            const t2 = document.getElementById('compareTabela2').value;
+            const l2 = document.getElementById('compareLetra2').value;
+            teams = [{ tabela: t1, letra: l1 }, { tabela: t2, letra: l2 }];
+        }
+
+        if (targetBody) {
+            let targetRow = document.getElementById(`${prefix}-date-${savedIso}`);
+
+            // SE A DATA NÃO EXISTE (ou se é a aba comparar precisando renderizar o ano certo)
+            if (!targetRow) {
+                targetBody.innerHTML = '';
+
+                // Atualiza variáveis globais de scroll
+                lastRenderedYear = targetYear;
+                firstRenderedYear = targetYear;
+
+                // Cria o ano específico
+                const frag = createYearFragment(targetYear, fn, teams, prefix);
+                targetBody.appendChild(frag);
+
+                // Tenta pegar a linha novamente
+                targetRow = document.getElementById(`${prefix}-date-${savedIso}`);
+            }
+
+            // Aplica a rolagem exata
+            if (targetRow) {
+                const newContainer = newTab.querySelector('.table-container');
+                setTimeout(() => {
+                    newContainer.scrollTop = targetRow.offsetTop - savedOffset;
+                }, 0);
+            }
+        }
     }
 }
 
