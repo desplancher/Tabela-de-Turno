@@ -220,15 +220,23 @@ function updateSelectors() {
 }
 
 // --- Inicialização ---
+// --- Inicialização (Versão Híbrida: Antigo + Novo) ---
 function init() {
-    // 1. Cria as opções de Mês e Ano
+    // 1. CARREGA O SISTEMA ANTIGO (Hidden)
     const mSel = document.getElementById('globalMonth');
     MONTH_NAMES.forEach((n, i) => mSel.add(new Option(n, i)));
 
     const ySel = document.getElementById('globalYear');
     for (let y = 2024; y <= 2030; y++) ySel.add(new Option(y, y));
 
-    // 2. Cria as opções de Tabelas (PUMA/Monte Alegre)
+    // 2. CARREGA O SISTEMA NOVO (Modal)
+    const modalMSel = document.getElementById('modalMonth');
+    MONTH_NAMES.forEach((n, i) => modalMSel.add(new Option(n, i)));
+
+    const modalYSel = document.getElementById('modalYear');
+    for (let y = 2024; y <= 2030; y++) modalYSel.add(new Option(y, y));
+
+    // 3. Configurações Comuns
     const cTab1 = document.getElementById('compareTabela1');
     const cTab2 = document.getElementById('compareTabela2');
     [cTab1, cTab2].forEach(s => {
@@ -236,24 +244,18 @@ function init() {
         s.add(new Option('Turno Monte Alegre', 'ma'));
     });
 
-    // 3. CRÍTICO: Cria as letras (A, B, C...) ANTES de carregar os dados
     updateCompareLetras();
-
-    // 4. AGORA carrega os dados salvos (porque as opções já existem)
     loadSavedSettings();
     setupAutoSave();
 
-    // 5. Renderiza a tela final
+    // 4. Inicia
     renderAll();
-    updateSelectors();
+    updateSelectors(); // Mantém o antigo sincronizado
 
-    // Botão inicial (mantido do seu código original)
+    // Botão inicial (se existir)
     const btnPuma = document.querySelector('button[onclick*="puma"]');
-    if (btnPuma) {
-        // Opcional: Você pode salvar a aba ativa no localStorage também se quiser futuramente
-        btnPuma.click();
-    }
-    // 6. Vai para hoje após meio segundo (para garantir que tudo carregou)
+    if (btnPuma) btnPuma.click();
+
     setTimeout(() => {
         goToToday();
     }, 500);
@@ -349,4 +351,276 @@ async function hardReset() {
     // 4. Recarrega a página forçando o download do servidor
     window.location.reload(true);
 }
+
+// --- LÓGICA DO NOVO MODAL (Adicionado) ---
+
+function openDateModal() {
+    const modal = document.getElementById('date-modal');
+
+    // Pega a data atual do sistema
+    const curYear = globalCurrentDate.getFullYear();
+    const curMonth = globalCurrentDate.getMonth();
+    const curDay = globalCurrentDate.getDate();
+
+    // Preenche os selects do modal
+    document.getElementById('modalYear').value = curYear;
+    document.getElementById('modalMonth').value = curMonth;
+
+    updateModalDays(); // Calcula os dias (28, 30, 31)
+    document.getElementById('modalDay').value = curDay;
+
+    modal.style.display = 'flex';
+}
+
+function closeDateModal() {
+    document.getElementById('date-modal').style.display = 'none';
+}
+
+function updateModalDays() {
+    const year = parseInt(document.getElementById('modalYear').value);
+    const month = parseInt(document.getElementById('modalMonth').value);
+    const daySelect = document.getElementById('modalDay');
+    const currentSelection = parseInt(daySelect.value) || 1;
+
+    // Descobre o último dia do mês
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+    daySelect.innerHTML = '';
+    for (let i = 1; i <= daysInMonth; i++) {
+        daySelect.add(new Option(i, i));
+    }
+
+    // Mantém o dia selecionado se possível
+    if (currentSelection <= daysInMonth) {
+        daySelect.value = currentSelection;
+    } else {
+        daySelect.value = 1;
+    }
+}
+
+function confirmDate() {
+    const y = parseInt(document.getElementById('modalYear').value);
+    const m = parseInt(document.getElementById('modalMonth').value);
+    const d = parseInt(document.getElementById('modalDay').value);
+
+    // Se mudou de ano, renderiza tudo
+    if (y !== globalCurrentDate.getFullYear()) {
+        globalCurrentDate.setFullYear(y);
+        renderAll();
+    }
+
+    globalCurrentDate.setMonth(m);
+    globalCurrentDate.setDate(d);
+
+    closeDateModal();
+
+    // Rola até a data
+    setTimeout(() => {
+        scrollToDate(new Date(y, m, d));
+    }, 100);
+
+    // Atualiza os selects antigos (invisíveis) para manter consistência
+    updateSelectors();
+}
+
+// --- LÓGICA DO CALENDÁRIO VISUAL (NOVO) ---
+
+// --- LÓGICA DO CALENDÁRIO COM SELETORES ---
+
+let calViewDate = new Date();     // Data que está sendo visualizada (Mês/Ano)
+let calSelectedDate = new Date(); // Data que o usuário clicou (Dia específico)
+let calMode = 'days';             // 'days', 'months', 'years'
+
+function openDateModal() {
+    const modal = document.getElementById('date-modal');
+
+    // Inicia com a data atual selecionada
+    calSelectedDate = new Date(globalCurrentDate);
+    calViewDate = new Date(globalCurrentDate);
+
+    // Começa sempre mostrando os dias
+    calMode = 'days';
+    renderCalendar();
+
+    modal.style.display = 'flex';
+}
+
+// Função Central que decide o que desenhar
+function renderCalendar() {
+    const titleMonth = document.getElementById('calTitleMonth');
+    const titleYear = document.getElementById('calTitleYear');
+    const weekdays = document.getElementById('calendarWeekdays');
+    const content = document.getElementById('calendarGrid');
+
+    // Atualiza Textos do Cabeçalho
+    titleMonth.innerText = MONTH_NAMES[calViewDate.getMonth()];
+    titleYear.innerText = calViewDate.getFullYear();
+
+    content.innerHTML = ''; // Limpa conteúdo
+
+    if (calMode === 'days') {
+        // MODO DIAS
+        weekdays.style.display = 'grid'; // Mostra Seg, Ter, Qua...
+        renderDaysGrid(content);
+
+    } else if (calMode === 'months') {
+        // MODO MESES
+        weekdays.style.display = 'none'; // Esconde dias da semana
+        renderMonthsGrid(content);
+
+    } else if (calMode === 'years') {
+        // MODO ANOS
+        weekdays.style.display = 'none';
+        renderYearsGrid(content);
+    }
+}
+
+// 1. Desenha a grade de Dias (1 a 31)
+function renderDaysGrid(container) {
+    container.className = 'days-grid'; // Aplica CSS de grid de 7 colunas
+
+    const y = calViewDate.getFullYear();
+    const m = calViewDate.getMonth();
+    const firstDay = new Date(y, m, 1).getDay();
+    const daysInMonth = new Date(y, m + 1, 0).getDate();
+
+    // Espaços vazios
+    for (let i = 0; i < firstDay; i++) {
+        const div = document.createElement('div');
+        div.className = 'calendar-day empty';
+        container.appendChild(div);
+    }
+
+    // Dias Reais
+    for (let d = 1; d <= daysInMonth; d++) {
+        const div = document.createElement('div');
+        div.className = 'calendar-day';
+        div.innerText = d;
+
+        // Selecionado
+        if (d === calSelectedDate.getDate() && m === calSelectedDate.getMonth() && y === calSelectedDate.getFullYear()) {
+            div.classList.add('selected');
+        }
+        // Hoje
+        const today = new Date();
+        if (d === today.getDate() && m === today.getMonth() && y === today.getFullYear()) {
+            div.classList.add('today');
+        }
+
+        div.onclick = () => {
+            calSelectedDate = new Date(y, m, d);
+            renderCalendar(); // Redesenha para atualizar bolinha
+        };
+        container.appendChild(div);
+    }
+}
+
+// 2. Desenha a grade de Meses (Jan a Dez)
+function renderMonthsGrid(container) {
+    container.className = 'month-picker-grid'; // Aplica CSS de 3 colunas
+
+    MONTH_NAMES.forEach((name, idx) => {
+        const div = document.createElement('div');
+        div.className = 'month-picker-item';
+        div.innerText = name.substring(0, 3); // "Jan", "Fev"...
+
+        if (idx === calViewDate.getMonth()) {
+            div.classList.add('selected');
+        }
+
+        div.onclick = () => {
+            calViewDate.setMonth(idx); // Muda o mês
+            calMode = 'days';          // Volta para ver os dias
+            renderCalendar();
+        };
+        container.appendChild(div);
+    });
+}
+
+// 3. Desenha a grade de Anos (12 anos ao redor do atual)
+function renderYearsGrid(container) {
+    container.className = 'year-picker-grid'; // Aplica CSS de 4 colunas
+
+    const currentYear = calViewDate.getFullYear();
+    // Mostra 12 anos: 5 antes e 6 depois do atual
+    const startYear = currentYear - 5;
+    const endYear = currentYear + 6;
+
+    for (let y = startYear; y <= endYear; y++) {
+        const div = document.createElement('div');
+        div.className = 'year-picker-item';
+        div.innerText = y;
+
+        if (y === calViewDate.getFullYear()) {
+            div.classList.add('selected');
+        }
+
+        div.onclick = () => {
+            calViewDate.setFullYear(y); // Muda o ano
+            calMode = 'months';         // Vai para seleção de mês (fluxo natural)
+            renderCalendar();
+        };
+        container.appendChild(div);
+    }
+}
+
+// Funções de Clique nos Títulos
+function openMonthPicker() {
+    calMode = (calMode === 'months') ? 'days' : 'months'; // Alterna
+    renderCalendar();
+}
+
+function openYearPicker() {
+    calMode = (calMode === 'years') ? 'days' : 'years'; // Alterna
+    renderCalendar();
+}
+
+// Navegação das Setas (< >)
+function changeCalendarPage(delta) {
+    if (calMode === 'days') {
+        // Avança/Recua Mês
+        calViewDate.setMonth(calViewDate.getMonth() + delta);
+    } else if (calMode === 'months') {
+        // Avança/Recua Ano
+        calViewDate.setFullYear(calViewDate.getFullYear() + delta);
+    } else if (calMode === 'years') {
+        // Avança/Recua Bloco de 12 Anos
+        calViewDate.setFullYear(calViewDate.getFullYear() + (delta * 12));
+    }
+    renderCalendar();
+}
+
+// Substitui a função confirmDate antiga para usar as variáveis do calendário visual
+function confirmDate() {
+    // Se mudou de ano, renderiza tudo
+    if (calSelectedDate.getFullYear() !== globalCurrentDate.getFullYear()) {
+        globalCurrentDate.setFullYear(calSelectedDate.getFullYear());
+        renderAll();
+    }
+
+    // Aplica a data selecionada no visual para o sistema global
+    globalCurrentDate = new Date(calSelectedDate);
+
+    closeDateModal();
+
+    // Rola até a data
+    setTimeout(() => {
+        scrollToDate(globalCurrentDate);
+    }, 100);
+
+    // Mantém os selects ocultos atualizados (caso decida voltar pro antigo)
+    updateSelectors();
+}
+
+// Atualização auxiliar para manter compatibilidade com o sistema antigo oculto
+function updateSelectors() {
+    // Se os elementos existirem (estão ocultos, mas existem), atualiza eles
+    const m = document.getElementById('globalMonth');
+    const y = document.getElementById('globalYear');
+    if (m && y) {
+        m.value = globalCurrentDate.getMonth();
+        y.value = globalCurrentDate.getFullYear();
+    }
+}
+
 window.onload = init;

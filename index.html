@@ -26,18 +26,15 @@
             <button class="tab-button" onclick="openTab(event, 'comparar')">Comparar</button>
         </div>
 
-        <div class="controls-header">
-            <div style="flex: 2; display: flex; gap: 5px;">
-                <select class="controls-select" id="globalMonth" onchange="jumpToDate()"></select>
-                <select class="controls-select" id="globalYear" onchange="jumpToDate()"></select>
-            </div>
+        <div class="controls-header" style="display: none;">
 
-            <div style="flex: 1; display: flex; justify-content: flex-end;">
-                <button class="controls-button" onclick="goToToday()" style="width: 100%; font-weight: bold;">
-                    📍 Hoje
-                </button>
-            </div>
+            <select class="controls-select" id="globalMonth" ></select>
+            <select class="controls-select" id="globalYear"></select>
         </div>
+
+        <button class="fab-today" onclick="goToToday()" aria-label="Ir para Hoje">
+            📍
+        </button>
 
         <div id="puma" class="tab-content">
             <h2 class="puma-header">Tabela PUMA</h2>
@@ -123,6 +120,60 @@
                 </table>
             </div>
         </div>
+
+        <div id="date-modal" class="modal-overlay" style="display: none;">
+            <div class="modal-content">
+                <h3>Selecionar Data</h3>
+
+                <div class="modal-body" style="display: none;">
+                    <div class="input-group">
+                        <label>Dia</label>
+                        <select id="modalDay" class="modal-select"></select>
+                    </div>
+                    <div class="input-group">
+                        <label>Mês</label>
+                        <select id="modalMonth" class="modal-select" onchange="updateModalDays()"></select>
+                    </div>
+                    <div class="input-group">
+                        <label>Ano</label>
+                        <select id="modalYear" class="modal-select" onchange="updateModalDays()"></select>
+                    </div>
+                </div>
+
+                <div class="calendar-wrapper">
+
+                    <div class="calendar-header">
+                        <button class="cal-nav-btn" onclick="changeCalendarPage(-1)">❮</button>
+
+                        <div class="calendar-title-group">
+                            <span id="calTitleMonth" class="cal-title-btn" onclick="openMonthPicker()">Mês</span>
+                            <span id="calTitleYear" class="cal-title-btn" onclick="openYearPicker()">Ano</span>
+                        </div>
+
+                        <button class="cal-nav-btn" onclick="changeCalendarPage(1)">❯</button>
+                    </div>
+
+                    <div class="calendar-weekdays" id="calendarWeekdays">
+                        <div>Dom</div><div>Seg</div><div>Ter</div><div>Qua</div><div>Qui</div><div>Sex</div><div>Sáb</div>
+                    </div>
+
+                    <div class="calendar-content" id="calendarGrid"></div>
+
+                </div>
+                <div class="modal-footer">
+                    <button class="btn-cancel" onclick="closeDateModal()">Cancelar</button>
+                    <button class="btn-confirm" onclick="confirmDate()">Ir</button>
+                </div>
+            </div>
+        </div>
+
+        <button class="fab-main" onclick="openDateModal()" aria-label="Escolher Data">
+            📅
+        </button>
+
+        <button class="fab-mini" onclick="goToToday()" aria-label="Ir para Hoje">
+            📍
+        </button>
     </div>
 
     <div class="container" id="settings-view" style="display: none;">

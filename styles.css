@@ -361,10 +361,10 @@ thead th {
 
             }
 
-    .controls-select,
-    .controls-button {
+    .controls-select, .controls-button {
         flex: 1;
-        min-width: 0;
+        max-width: 100px;
+        max-height: 30px;
         font-size: 16px;
         padding: 3px;
     }
@@ -395,3 +395,379 @@ thead th {
             padding: 12px;
         }
     }
+
+.fab-today {
+    position: fixed;
+    /* Calcula: Altura do menu (65px) + Espaço de respiro (20px) */
+    bottom: 85px;
+    right: 20px;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%; /* Faz ficar perfeitamente redondo */
+
+    background-color: var(--header-bg); /* Verde do tema */
+    color: white;
+    border: none;
+    /* Sombra para dar efeito de "flutuando" */
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    font-size: 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 1000; /* Garante que fique acima da tabela */
+
+    transition: transform 0.2s, background-color 0.2s, box-shadow 0.2s;
+}
+
+    /* Efeito ao clicar */
+    .fab-today:active {
+        transform: scale(0.90); /* Diminui um pouco */
+        background-color: #004D40; /* Verde mais escuro */
+    }
+
+/* Esconde o botão se estiver na tela de configurações */
+#settings-view .fab-today {
+    display: none;
+}
+/* =========================================
+   NOVO: ESTILOS DO MODAL E BOTÕES FLUTUANTES
+   ========================================= */
+
+/* Botão Principal (Data - Calendário) */
+.fab-main {
+    position: fixed;
+    bottom: 85px; /* Acima do menu inferior */
+    right: 20px;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background-color: var(--header-bg);
+    color: white;
+    border: none;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    font-size: 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 1000;
+    transition: transform 0.2s;
+}
+
+    .fab-main:active {
+        transform: scale(0.95);
+    }
+
+/* Botão Secundário (Hoje - Pin) */
+.fab-mini {
+    position: fixed;
+    bottom: 155px; /* Acima do botão principal */
+    right: 28px; /* Centralizado com o de baixo */
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-color: white;
+    color: var(--header-bg);
+    border: 1px solid #ddd;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    font-size: 1.2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 1000;
+}
+
+    .fab-mini:active {
+        background-color: #f0f0f0;
+    }
+
+/* Esconde na tela de configurações */
+#settings-view .fab-main,
+#settings-view .fab-mini {
+    display: none;
+}
+
+/* Estilos do Modal */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 2000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(3px);
+}
+
+.modal-content {
+    background: white;
+    width: 90%;
+    max-width: 350px;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+    animation: popIn 0.2s ease-out;
+}
+
+@keyframes popIn {
+    from {
+        transform: scale(0.8);
+        opacity: 0;
+    }
+
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+.modal-content h3 {
+    margin-top: 0;
+    color: var(--header-bg);
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.modal-body {
+    display: flex;
+    gap: 10px;
+    justify-content: space-between;
+    margin-bottom: 25px;
+}
+
+.input-group {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+}
+
+    .input-group label {
+        font-size: 0.75rem;
+        color: #666;
+        margin-bottom: 4px;
+        font-weight: 600;
+    }
+
+.modal-select {
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    background: #f9f9f9;
+    font-size: 1rem;
+    width: 100%;
+}
+
+.modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+.btn-cancel, .btn-confirm {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.btn-cancel {
+    background: transparent;
+    color: #666;
+}
+
+.btn-confirm {
+    background-color: var(--header-bg);
+    color: white;
+}
+
+/* =========================================
+   ESTILOS DO NOVO CALENDÁRIO (GRID)
+   ========================================= */
+
+.calendar-wrapper {
+    width: 100%;
+    margin-bottom: 20px;
+    user-select: none; /* Impede seleção de texto ao clicar rápido */
+}
+
+/* Cabeçalho (Mês e Setas) */
+.calendar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    font-weight: 700;
+    color: var(--header-bg);
+    text-transform: uppercase;
+}
+
+.cal-nav-btn {
+    background: none;
+    border: none;
+    font-size: 1.2rem;
+    color: #666;
+    cursor: pointer;
+    padding: 5px 10px;
+    border-radius: 4px;
+}
+
+    .cal-nav-btn:hover {
+        background-color: #eee;
+    }
+
+/* Dias da Semana (Dom, Seg...) */
+.calendar-weekdays {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    text-align: center;
+    font-size: 0.75rem;
+    color: #999;
+    font-weight: 600;
+    margin-bottom: 10px;
+}
+
+/* Grid Numérico */
+.calendar-days {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 5px;
+    text-align: center;
+}
+
+/* Cada dia individual */
+.calendar-day {
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.9rem;
+    cursor: pointer;
+    border-radius: 50%; /* Bolinha */
+    transition: background 0.2s;
+    color: var(--text-color);
+}
+
+    .calendar-day:hover {
+        background-color: #f0f0f0;
+    }
+
+    /* Dia Vazio (espaço antes do dia 1) */
+    .calendar-day.empty {
+        cursor: default;
+        pointer-events: none;
+    }
+
+    /* Dia Selecionado (Bolinha Verde) */
+    .calendar-day.selected {
+        background-color: var(--header-bg); /* Verde PUMA */
+        color: white;
+        font-weight: bold;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    }
+
+    /* Dia de "Hoje" (Bordinha sutil se não estiver selecionado) */
+    .calendar-day.today:not(.selected) {
+        border: 1px solid var(--header-bg);
+        color: var(--header-bg);
+        font-weight: bold;
+    }
+
+/* =========================================
+   ESTILOS DO SELETOR DE MÊS/ANO
+   ========================================= */
+
+/* Título clicável (Mês e Ano) */
+.calendar-title-group {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.cal-title-btn {
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 4px;
+    transition: background 0.2s;
+}
+
+    .cal-title-btn:hover {
+        background-color: #f0f0f0;
+        text-decoration: underline;
+    }
+
+/* Área de Conteúdo (onde ficam os dias/meses/anos) */
+.calendar-content {
+    min-height: 220px; /* Mantém altura fixa para o modal não ficar pulando */
+}
+
+/* GRID DE MESES (3 colunas x 4 linhas) */
+.month-picker-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    padding: 10px 0;
+}
+
+.month-picker-item {
+    padding: 15px 5px;
+    text-align: center;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 600;
+    border: 1px solid #eee;
+    transition: all 0.2s;
+}
+
+    .month-picker-item:hover {
+        background-color: #f0f0f0;
+        border-color: #ccc;
+    }
+
+    .month-picker-item.selected {
+        background-color: var(--header-bg);
+        color: white;
+        border-color: var(--header-bg);
+    }
+
+/* GRID DE ANOS (4 colunas) */
+.year-picker-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    padding: 10px 0;
+}
+
+.year-picker-item {
+    padding: 12px 5px;
+    text-align: center;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.95rem;
+    font-weight: 600;
+    border: 1px solid #eee;
+}
+
+    .year-picker-item:hover {
+        background-color: #f0f0f0;
+        border-color: #ccc;
+    }
+
+    .year-picker-item.selected {
+        background-color: var(--header-bg);
+        color: white;
+    }
+
+/* REUTILIZAÇÃO DO GRID DE DIAS (Mantém o estilo anterior) */
+.days-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 5px;
+    text-align: center;
+}
