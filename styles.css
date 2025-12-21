@@ -178,8 +178,14 @@ thead th {
     }
 
 /* --- Cores Específicas --- */
-.dia-sab, .dia-dom, .dia-feriado {
-    color: var(--weekend-color);
+.dia-feriado {
+    color: #d32f2f !important; /* Vermelho */
+    font-weight: 700;
+}
+
+/* Fim de semana (Domingo/Sábado): Pode manter vermelho ou mudar se quiser */
+.dia-dom, .dia-sab {
+    color: #d32f2f; /* Mantém vermelho ou mude para #333 se quiser só o feriado vermelho */
     font-weight: 700;
 }
 
@@ -556,6 +562,14 @@ thead th {
     grid-template-rows: repeat(6, 1fr);
     gap: 5px;
     text-align: center;
+}
+
+.row-today {
+    background-color: #fff9c4 !important; /* Amarelo bem suave */
+    color: #000; /* Garante texto preto para contraste */
+}
+tbody tr.row-today:hover {
+    background-color: #fff59d !important; /* Amarelo um pouco mais escuro ao passar o mouse */
 }
 
 .calendar-title-group {

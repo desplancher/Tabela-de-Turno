@@ -45,13 +45,41 @@ function getEaster(y) {
 
 function getHolidays(y) {
     if (holidayCache[y]) return holidayCache[y];
-    const h = {}; const add = (dt, nm) => h[toISODate(dt)] = nm;
-    const e = getEaster(y);
-    add(new Date(y, 0, 1), "Ano Novo");
-    add(new Date(y, 11, 25), "Natal");
-    add(new Date(y, 4, 1), "Trabalho");
-    add(new Date(y, 8, 7), "Independência");
-    holidayCache[y] = h; return h;
+    const h = {};
+
+    // Função auxiliar para formatar e adicionar na lista
+    const add = (dt, nm) => h[toISODate(dt)] = nm;
+
+    // --- 1. FERIADOS FIXOS ---
+    add(new Date(y, 0, 1), "Confraternização Universal"); // 1 jan
+    add(new Date(y, 3, 21), "Tiradentes");                // 21 abr
+    add(new Date(y, 4, 1), "Dia do Trabalho");            // 1 mai
+    add(new Date(y, 8, 7), "Independência do Brasil");    // 7 set
+    add(new Date(y, 9, 12), "Nossa Sra. Aparecida");      // 12 out
+    add(new Date(y, 10, 2), "Finados");                   // 2 nov
+    add(new Date(y, 10, 15), "Proclamação da República"); // 15 nov
+    add(new Date(y, 11, 25), "Natal");                    // 25 dez
+
+    // --- 2. FERIADOS MÓVEIS (Baseados na Páscoa) ---
+    const pascoa = getEaster(y);
+
+    // Carnaval (Terça-feira): 47 dias antes da Páscoa
+    const carnaval = new Date(pascoa);
+    carnaval.setDate(pascoa.getDate() - 47);
+    add(carnaval, "Carnaval");
+
+    // Sexta-feira Santa: 2 dias antes da Páscoa
+    const sextaSanta = new Date(pascoa);
+    sextaSanta.setDate(pascoa.getDate() - 2);
+    add(sextaSanta, "Sexta-feira Santa");
+
+    // Corpus Christi: 60 dias após a Páscoa
+    const corpus = new Date(pascoa);
+    corpus.setDate(pascoa.getDate() + 60);
+    add(corpus, "Corpus Christi");
+
+    holidayCache[y] = h;
+    return h;
 }
 
 function isHoliday(d) { return getHolidays(d.getFullYear())[toISODate(d)] || null; }
@@ -112,8 +140,18 @@ function createYearFragment(year, fn, teams, prefix) {
             const tr = document.createElement('tr');
             tr.id = `${prefix}-date-${iso}`;
 
-            let html = `<td class="${hol ? 'dia-feriado' : (w == 0 || w == 6 ? 'dia-dom' : '')}">${d.toLocaleDateString('pt-BR')}</td>`;
-            html += `<td class="${hol ? 'dia-feriado' : (w == 0 || w == 6 ? 'dia-dom' : '')}">${DAY_NAMES[w]}</td>`;
+            // --- LÓGICA DE CORES SEPARADA ---
+
+            // Regra 1: Coluna DATA (Só feriado fica vermelho)
+            const classData = hol ? 'dia-feriado' : '';
+
+            // Regra 2: Coluna DIA (Feriado OU Fim de semana fica vermelho)
+            const isWeekend = (w === 0 || w === 6);
+            const classDia = (hol || isWeekend) ? 'dia-feriado' : '';
+
+            // Monta o HTML
+            let html = `<td class="${classData}">${d.toLocaleDateString('pt-BR')}</td>`;
+            html += `<td class="${classDia}">${DAY_NAMES[w]}</td>`;
 
             teams.forEach(t => {
                 let s;
@@ -129,8 +167,8 @@ function createYearFragment(year, fn, teams, prefix) {
             tr.innerHTML = html;
 
             if (d.getTime() === TODAY.getTime()) {
-                tr.style.border = "2px solid #1B5E20";
-                tr.style.fontWeight = "bold";
+                // Removemos o style.border antigo e adicionamos a classe CSS
+                tr.classList.add('row-today');
             }
             fragment.appendChild(tr);
         }
