@@ -8,7 +8,6 @@ const TODAY = new Date(); TODAY.setHours(0, 0, 0, 0);
 let globalCurrentDate = new Date();
 let holidayCache = {};
 
-// Dados da Tabela PUMA
 const PUMA_ANCHOR_DATE = new Date(2025, 0, 1);
 const PUMA_CYCLES = {
     A: ['F', '0', '0', '8', '8', '8', 'F', 'F', 'F', '16', '16', '16', 'F', '0', '0', '8', '8', 'F', 'F', 'F', 'F', '16', '16', 'F', '0', '0', '0', '8', '8', 'F', 'F', 'F', 'F', '16', '16'],
@@ -18,7 +17,6 @@ const PUMA_CYCLES = {
     E: ['0', '8', '8', 'F', 'F', 'F', 'F', '16', '16', 'F', '0', '0', '0', '8', '8', 'F', 'F', 'F', 'F', '16', '16', 'F', '0', '0', '8', '8', '8', 'F', 'F', 'F', '16', '16', '16', 'F', '0']
 };
 
-// Dados da Tabela Monte Alegre
 const MA_ANCHOR_DATE = new Date(2025, 2, 15);
 const MA_SHIFT_CYCLE = ['F', 'F', 'F', 'F', '0', '0', '8', '8', '16', '16'];
 const MA_TEAM_OFFSETS = { A: 0, B: 4, C: 8, D: 6, E: 2 };
@@ -36,7 +34,6 @@ function toISODate(date) {
 
 function diffDays(d1, d2) { return Math.floor((d2 - d1) / (1000 * 60 * 60 * 24)); }
 
-// --- Cálculo de Feriados ---
 function getEaster(y) {
     let f = Math.floor, c = f(y / 100), n = y - 19 * f(y / 19), k = f((c - 17) / 25), i = c - f(c / 4) - f((c - k) / 3) + 19 * n + 15;
     i = i - 30 * f(i / 30); i = i - f(i / 28) * (1 - f(i / 28) * f(29 / (i + 1)) * f((21 - n) / 11));
@@ -57,7 +54,6 @@ function getHolidays(y) {
 
 function isHoliday(d) { return getHolidays(d.getFullYear())[toISODate(d)] || null; }
 
-// --- Cálculo de Turnos ---
 function getPumaShift(d, t) {
     const dDiff = diffDays(PUMA_ANCHOR_DATE, d);
     const idx = ((dDiff % 35) + 35) % 35;
@@ -73,7 +69,7 @@ function getMaShift(d, t) {
 const SHIFT_FUNCTIONS = { 'puma': getPumaShift, 'ma': getMaShift };
 
 // ============================================================================
-// 3. RENDERIZAÇÃO DAS TABELAS (CORE)
+// 3. RENDERIZAÇÃO DAS TABELAS
 // ============================================================================
 
 function renderTable(body, fn, teams, prefix) {
@@ -148,7 +144,7 @@ function renderAll() {
 }
 
 // ============================================================================
-// 4. LÓGICA DO NOVO CALENDÁRIO VISUAL (MODAL)
+// 4. CALENDÁRIO VISUAL
 // ============================================================================
 
 let calViewDate = new Date();
@@ -289,7 +285,7 @@ function confirmDate() {
 }
 
 // ============================================================================
-// 5. NAVEGAÇÃO E INTERFACE (SCROLL, ABAS, MENU)
+// 5. NAVEGAÇÃO E INTERFACE
 // ============================================================================
 
 function getVisibleDateIso() {
@@ -331,7 +327,6 @@ function scrollToDate(date, highlight = true) {
     const el = document.getElementById(`${prefix}-date-${iso}`);
 
     if (el) {
-        // SCROLL INSTANTÂNEO (behavior: auto)
         el.scrollIntoView({ behavior: "auto", block: "center" });
 
         if (highlight) {
@@ -370,7 +365,6 @@ function updateSelectors() {
     }
 }
 
-// Atualiza a posição da linha verde (Slider)
 function updateTabSlider() {
     const activeBtn = document.querySelector('.tab-button.active');
     const slider = document.querySelector('.tab-slider');
@@ -381,15 +375,10 @@ function updateTabSlider() {
     }
 }
 
-// Troca de Aba (Simplificada - Sem Animação de Swipe)
 function openTab(e, nm) {
     const currentIso = getVisibleDateIso();
 
-    document.querySelectorAll('.tab-content').forEach(c => {
-        c.classList.remove('active');
-        // c.style.transform = ''; // Não precisa mais limpar transform
-    });
-
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
     document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
 
     const targetTab = document.getElementById(nm);
@@ -402,11 +391,10 @@ function openTab(e, nm) {
         if (btn) btn.classList.add('active');
     }
 
-    updateTabSlider(); // Move a linha verde
+    updateTabSlider();
 
     if (nm === 'comparar') renderTableCompare();
 
-    // Sincroniza o Scroll Instantaneamente
     if (currentIso) {
         const [y, m, d] = currentIso.split('-').map(Number);
         const dateObj = new Date(y, m - 1, d);
@@ -511,7 +499,6 @@ function init() {
 
     renderAll();
     updateSelectors();
-    // setupSwipeHandlers(); // REMOVIDO: Desativa gestos de toque
 
     const btnPuma = document.querySelector('button[onclick*="puma"]');
     if (btnPuma) btnPuma.click();

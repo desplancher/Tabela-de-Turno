@@ -1,27 +1,20 @@
 :root {
-    /* --- Cores Gerais --- */
     --bg-color: #f4f7f6;
     --text-color: #1f2937;
     --border-color: #ddd;
-    /* --- Cabeçalhos --- */
     --header-bg: #1B5E20;
     --header-text: #C8E6C9;
     --table-header-bg: #333;
     --table-header-text: #f0f0f0;
-    /* --- Tabela --- */
     --stripe-color: #f9f9f9;
     --weekend-color: #d9534f;
     --holiday-color: #d9534f;
-    /* --- Turnos (PUMA) --- */
     --puma-f-color: #00B050;
     --puma-0-color: #0070C0;
     --puma-8-color: #E36C0A;
     --puma-16-color: #5A2D82;
 }
 
-/* =========================================
-   RESET E BASE
-   ========================================= */
 * {
     box-sizing: border-box;
     margin: 0;
@@ -45,9 +38,7 @@ h2 {
     text-transform: uppercase;
 }
 
-/* =========================================
-   LAYOUT E ABAS (COM SLIDER)
-   ========================================= */
+/* --- Layout e Abas --- */
 .container {
     width: 100%;
     max-width: 950px;
@@ -57,7 +48,6 @@ h2 {
     overflow: hidden;
 }
 
-/* Container das abas FIXO no topo */
 .tab-container {
     display: flex;
     background-color: #e5e7eb;
@@ -85,7 +75,7 @@ h2 {
         color: #111827;
     }
 
-/* A Linha Deslizante */
+/* Linha Deslizante */
 .tab-slider {
     position: absolute;
     bottom: 0;
@@ -105,14 +95,11 @@ h2 {
         display: block;
     }
 
-/* =========================================
-   TABELAS
-   ========================================= */
+/* --- Tabelas --- */
 .table-container {
     overflow-y: auto;
     overflow-x: hidden;
     height: calc(100vh - 220px);
-    /* Scroll instantâneo */
 }
 
 table {
@@ -136,7 +123,6 @@ tbody tr:hover {
     cursor: pointer;
 }
 
-/* --- Cabeçalho Fixo --- */
 thead th {
     position: sticky;
     top: 0;
@@ -160,7 +146,7 @@ thead th {
         pointer-events: none;
     }
 
-/* --- Cores Específicas --- */
+/* --- Cores --- */
 .dia-sab, .dia-dom, .dia-feriado {
     color: var(--weekend-color);
     font-weight: 700;
@@ -205,9 +191,7 @@ thead th {
     font-size: 0.9rem;
 }
 
-/* =========================================
-   COMPARAÇÃO
-   ========================================= */
+/* --- Comparação --- */
 .compare-controls {
     display: flex;
     align-items: flex-end;
@@ -241,9 +225,17 @@ thead th {
         color: #4b5563;
     }
 
-/* =========================================
-   MENU INFERIOR (Bottom Nav)
-   ========================================= */
+.controls-select {
+    flex: 1;
+    height: 40px;
+    padding: 5px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background-color: #f1f1f1;
+    font-size: 16px;
+}
+
+/* --- Menu Inferior --- */
 .bottom-nav {
     position: fixed;
     bottom: 0;
@@ -283,9 +275,7 @@ thead th {
     margin-bottom: 2px;
 }
 
-/* =========================================
-   BOTÕES E MODAL
-   ========================================= */
+/* --- Componentes --- */
 .btn-reset {
     background-color: #d32f2f;
     color: white;
@@ -319,7 +309,7 @@ thead th {
     animation: flash-row 2s ease-out;
 }
 
-/* --- Botões Flutuantes (FAB) --- */
+/* FABs */
 .fab-main {
     position: fixed;
     bottom: 85px;
@@ -367,12 +357,11 @@ thead th {
         background-color: #f0f0f0;
     }
 
-#settings-view .fab-main,
-#settings-view .fab-mini {
+#settings-view .fab-main, #settings-view .fab-mini {
     display: none;
 }
 
-/* --- Modal --- */
+/* Modal */
 .modal-overlay {
     position: fixed;
     top: 0;
@@ -440,9 +429,7 @@ thead th {
     color: white;
 }
 
-/* =========================================
-   CALENDÁRIO VISUAL
-   ========================================= */
+/* Calendário */
 .calendar-wrapper {
     width: 100%;
     margin-bottom: 20px;
@@ -512,60 +499,39 @@ thead th {
         text-decoration: underline;
     }
 
-.month-picker-grid {
+.month-picker-grid, .year-picker-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
     gap: 10px;
     padding: 10px 0;
 }
 
-.month-picker-item {
-    padding: 15px 5px;
+.month-picker-grid {
+    grid-template-columns: repeat(3, 1fr);
+}
+
+.year-picker-grid {
+    grid-template-columns: repeat(4, 1fr);
+}
+
+.month-picker-item, .year-picker-item {
+    padding: 12px 5px;
     text-align: center;
     border-radius: 8px;
     cursor: pointer;
     font-size: 0.9rem;
     font-weight: 600;
     border: 1px solid #eee;
-    transition: all 0.2s;
 }
 
-    .month-picker-item:hover {
+    .month-picker-item:hover, .year-picker-item:hover {
         background-color: #f0f0f0;
         border-color: #ccc;
     }
 
-    .month-picker-item.selected {
+    .month-picker-item.selected, .year-picker-item.selected {
         background-color: var(--header-bg);
         color: white;
         border-color: var(--header-bg);
-    }
-
-.year-picker-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 10px;
-    padding: 10px 0;
-}
-
-.year-picker-item {
-    padding: 12px 5px;
-    text-align: center;
-    border-radius: 8px;
-    cursor: pointer;
-    font-size: 0.95rem;
-    font-weight: 600;
-    border: 1px solid #eee;
-}
-
-    .year-picker-item:hover {
-        background-color: #f0f0f0;
-        border-color: #ccc;
-    }
-
-    .year-picker-item.selected {
-        background-color: var(--header-bg);
-        color: white;
     }
 
 .calendar-day {
@@ -602,9 +568,7 @@ thead th {
         font-weight: bold;
     }
 
-/* =========================================
-   RESPONSIVIDADE (MOBILE)
-   ========================================= */
+/* Mobile */
 @media (max-width: 768px) {
     body {
         padding: 10px;
@@ -621,18 +585,6 @@ thead th {
         font-size: 0.9rem;
     }
 
-    .controls-header {
-        flex-direction: column;
-        align-items: stretch;
-        padding: 3px;
-    }
-
-        .controls-header > div {
-            display: flex;
-            gap: 10px;
-            justify-content: space-between;
-        }
-
     .controls-select, .controls-button {
         flex: 1;
         max-width: none;
@@ -647,8 +599,6 @@ thead th {
 
     th {
         font-size: 0.75rem;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
     }
 
     .compare-controls {
@@ -658,11 +608,5 @@ thead th {
 
     .compare-group {
         width: 100%;
-    }
-
-    #compareButton {
-        width: 100%;
-        margin-top: 10px;
-        padding: 12px;
     }
 }
