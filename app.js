@@ -79,7 +79,8 @@ const SHIFT_FUNCTIONS = { 'puma': getPumaShift, 'ma': getMaShift };
 // ============================================================================
 
 // Renderiza a tabela anual completa
-function renderTable(body, fn, teams) {
+// ADICIONADO: 'prefix' para criar IDs únicos por tabela
+function renderTable(body, fn, teams, prefix) {
     if (!body) return;
     body.innerHTML = '';
 
@@ -103,7 +104,8 @@ function renderTable(body, fn, teams) {
             const hol = isHoliday(d);
 
             const tr = document.createElement('tr');
-            tr.id = `date-${iso}`; // ID para rolagem automática
+            // CORREÇÃO: ID Único usando o prefixo da tabela (ex: puma-date-2025-01-01)
+            tr.id = `${prefix}-date-${iso}`;
 
             let html = `<td class="${hol ? 'dia-feriado' : (w == 0 || w == 6 ? 'dia-dom' : '')}">${d.toLocaleDateString('pt-BR')}</td>`;
             html += `<td class="${hol ? 'dia-feriado' : (w == 0 || w == 6 ? 'dia-dom' : '')}">${DAY_NAMES[w]}</td>`;
@@ -141,36 +143,35 @@ function renderTableCompare() {
         { tabela: t1, letra: l1 },
         { tabela: t2, letra: l2 }
     ];
-    renderTable(document.getElementById('compare-table-body'), null, comparisonSources);
+    // CORREÇÃO: Passa o prefixo 'compare'
+    renderTable(document.getElementById('compare-table-body'), null, comparisonSources, 'compare');
 }
 
 function renderAll() {
-    renderTable(document.getElementById('puma-table-body'), getPumaShift, ['A', 'B', 'C', 'D', 'E']);
-    renderTable(document.getElementById('ma-table-body'), getMaShift, ['A', 'B', 'C', 'D', 'E']);
+    // CORREÇÃO: Passa os prefixos corretos para cada tabela
+    renderTable(document.getElementById('puma-table-body'), getPumaShift, ['A', 'B', 'C', 'D', 'E'], 'puma');
+    renderTable(document.getElementById('ma-table-body'), getMaShift, ['A', 'B', 'C', 'D', 'E'], 'ma');
+
     if (document.getElementById('comparar').classList.contains('active')) {
         renderTableCompare();
     }
-    updateSelectors(); // Mantém selects ocultos sincronizados
+    updateSelectors();
 }
 
 // ============================================================================
 // 4. LÓGICA DO NOVO CALENDÁRIO VISUAL (MODAL)
 // ============================================================================
 
-let calViewDate = new Date();     // Data visualizada (Mês/Ano)
-let calSelectedDate = new Date(); // Data selecionada (Dia)
-let calMode = 'days';             // Modos: 'days', 'months', 'years'
+let calViewDate = new Date();
+let calSelectedDate = new Date();
+let calMode = 'days';
 
 function openDateModal() {
     const modal = document.getElementById('date-modal');
-
-    // Inicia com a data atual do sistema
     calSelectedDate = new Date(globalCurrentDate);
     calViewDate = new Date(globalCurrentDate);
-
     calMode = 'days';
     renderCalendar();
-
     modal.style.display = 'flex';
 }
 
@@ -184,7 +185,6 @@ function renderCalendar() {
     const weekdays = document.getElementById('calendarWeekdays');
     const content = document.getElementById('calendarGrid');
 
-    // Atualiza Cabeçalho
     titleMonth.innerText = MONTH_NAMES[calViewDate.getMonth()];
     titleYear.innerText = calViewDate.getFullYear();
     content.innerHTML = '';
@@ -208,14 +208,12 @@ function renderDaysGrid(container) {
     const firstDay = new Date(y, m, 1).getDay();
     const daysInMonth = new Date(y, m + 1, 0).getDate();
 
-    // Espaços vazios
     for (let i = 0; i < firstDay; i++) {
         const div = document.createElement('div');
         div.className = 'calendar-day empty';
         container.appendChild(div);
     }
 
-    // Dias
     for (let d = 1; d <= daysInMonth; d++) {
         const div = document.createElement('div');
         div.className = 'calendar-day';
@@ -244,9 +242,7 @@ function renderMonthsGrid(container) {
         const div = document.createElement('div');
         div.className = 'month-picker-item';
         div.innerText = name.substring(0, 3);
-
         if (idx === calViewDate.getMonth()) div.classList.add('selected');
-
         div.onclick = () => {
             calViewDate.setMonth(idx);
             calMode = 'days';
@@ -266,9 +262,7 @@ function renderYearsGrid(container) {
         const div = document.createElement('div');
         div.className = 'year-picker-item';
         div.innerText = y;
-
         if (y === calViewDate.getFullYear()) div.classList.add('selected');
-
         div.onclick = () => {
             calViewDate.setFullYear(y);
             calMode = 'months';
@@ -278,7 +272,6 @@ function renderYearsGrid(container) {
     }
 }
 
-// Navegação do Calendário
 function openMonthPicker() { calMode = (calMode === 'months') ? 'days' : 'months'; renderCalendar(); }
 function openYearPicker() { calMode = (calMode === 'years') ? 'days' : 'years'; renderCalendar(); }
 
@@ -289,7 +282,6 @@ function changeCalendarPage(delta) {
     renderCalendar();
 }
 
-// Confirmação da Data (Link entre Modal e App)
 function confirmDate() {
     const y = calSelectedDate.getFullYear();
     const m = calSelectedDate.getMonth();
@@ -304,16 +296,28 @@ function confirmDate() {
     closeDateModal();
 
     setTimeout(() => { scrollToDate(globalCurrentDate); }, 100);
-    updateSelectors(); // Sincroniza selects ocultos
+    updateSelectors();
 }
 
 // ============================================================================
 // 5. NAVEGAÇÃO E INTERFACE (SCROLL, ABAS, MENU)
 // ============================================================================
 
+// CORREÇÃO: Agora detecta a aba ativa e busca o ID correto (com prefixo)
 function scrollToDate(date) {
     const iso = toISODate(date);
-    const el = document.getElementById(`date-${iso}`);
+
+    // 1. Descobrir qual aba está ativa para saber qual prefixo usar
+    const activeTab = document.querySelector('.tab-content.active');
+    let prefix = '';
+
+    if (activeTab.id === 'puma') prefix = 'puma';
+    else if (activeTab.id === 'monte-alegre') prefix = 'ma';
+    else if (activeTab.id === 'comparar') prefix = 'compare';
+
+    // 2. Busca o elemento pelo ID ÚNICO (ex: ma-date-2025-01-01)
+    const el = document.getElementById(`${prefix}-date-${iso}`);
+
     if (el) {
         el.scrollIntoView({ behavior: "smooth", block: "center" });
         el.classList.add('highlight-flash');
@@ -328,7 +332,6 @@ function goToToday() {
     setTimeout(() => scrollToDate(TODAY), 100);
 }
 
-// Chamado pelos selects ocultos (se existirem)
 function jumpToDate() {
     const y = parseInt(document.getElementById('globalYear').value);
     const m = parseInt(document.getElementById('globalMonth').value);
@@ -432,17 +435,14 @@ async function hardReset() {
 
 // --- FUNÇÃO MAIN ---
 function init() {
-    // 1. Popula Selects Ocultos (Sistema Antigo/Backup)
     const mSel = document.getElementById('globalMonth');
     const ySel = document.getElementById('globalYear');
 
-    // Verifica se os elementos existem antes de tentar popular
     if (mSel && ySel) {
         MONTH_NAMES.forEach((n, i) => mSel.add(new Option(n, i)));
         for (let y = 2024; y <= 2030; y++) ySel.add(new Option(y, y));
     }
 
-    // 2. Configurações de Comparação
     const cTab1 = document.getElementById('compareTabela1');
     const cTab2 = document.getElementById('compareTabela2');
     [cTab1, cTab2].forEach(s => {
@@ -454,11 +454,9 @@ function init() {
     loadSavedSettings();
     setupAutoSave();
 
-    // 3. Inicializa Renderização
     renderAll();
     updateSelectors();
 
-    // Seleciona aba inicial
     const btnPuma = document.querySelector('button[onclick*="puma"]');
     if (btnPuma) btnPuma.click();
 
