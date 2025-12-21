@@ -1,20 +1,27 @@
 ﻿:root {
+    /* --- Cores Gerais --- */
     --bg-color: #f4f7f6;
     --text-color: #1f2937;
     --border-color: #ddd;
+    /* --- Cabeçalhos --- */
     --header-bg: #1B5E20;
     --header-text: #C8E6C9;
     --table-header-bg: #333;
     --table-header-text: #f0f0f0;
+    /* --- Tabela --- */
     --stripe-color: #f9f9f9;
     --weekend-color: #d9534f;
     --holiday-color: #d9534f;
+    /* --- Turnos (PUMA) --- */
     --puma-f-color: #00B050;
     --puma-0-color: #0070C0;
     --puma-8-color: #E36C0A;
     --puma-16-color: #5A2D82;
 }
 
+/* =========================================
+   RESET E BASE
+   ========================================= */
 * {
     box-sizing: border-box;
     margin: 0;
@@ -27,8 +34,11 @@ body {
     color: var(--text-color);
     display: flex;
     justify-content: center;
+    /* CORREÇÃO DE LAYOUT: Ocupa toda a tela e trava rolagem externa */
+    height: 100vh;
+    overflow: hidden;
     padding: 20px;
-    padding-bottom: 80px;
+    padding-bottom: 80px; /* Espaço para o menu inferior */
 }
 
 h2 {
@@ -36,9 +46,12 @@ h2 {
     text-align: center;
     color: var(--header-text);
     text-transform: uppercase;
+    flex-shrink: 0; /* Garante que o título não amasse */
 }
 
-/* --- Layout e Abas --- */
+/* =========================================
+   LAYOUT E ABAS (FLEXBOX)
+   ========================================= */
 .container {
     width: 100%;
     max-width: 950px;
@@ -46,8 +59,13 @@ h2 {
     border-radius: 12px;
     box-shadow: 0 4px 6px rgba(0,0,0,0.1);
     overflow: hidden;
+    /* CORREÇÃO: Container flexível que ocupa a altura total */
+    height: 100%;
+    display: flex;
+    flex-direction: column;
 }
 
+/* Container das abas */
 .tab-container {
     display: flex;
     background-color: #e5e7eb;
@@ -55,6 +73,7 @@ h2 {
     top: 0;
     z-index: 100;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    flex-shrink: 0; /* Não deixa as abas encolherem */
 }
 
 .tab-button {
@@ -75,7 +94,7 @@ h2 {
         color: #111827;
     }
 
-/* Linha Deslizante */
+/* A Linha Deslizante */
 .tab-slider {
     position: absolute;
     bottom: 0;
@@ -86,20 +105,30 @@ h2 {
     width: 0;
 }
 
+/* Conteúdo da Aba */
 .tab-content {
     display: none;
-    padding-bottom: 5px;
+    /* CORREÇÃO: Flexível para preencher o espaço */
+    flex-direction: column;
+    flex: 1;
+    overflow: hidden;
+    padding-bottom: 0;
 }
 
     .tab-content.active {
-        display: block;
+        /* CORREÇÃO: Usamos flex em vez de block para alinhar a altura */
+        display: flex;
     }
 
-/* --- Tabelas --- */
+/* =========================================
+   TABELAS
+   ========================================= */
 .table-container {
+    /* CORREÇÃO: Remove altura fixa e usa flex: 1 para ocupar tudo */
+    height: auto;
+    flex: 1;
     overflow-y: auto;
     overflow-x: hidden;
-    height: calc(100vh - 220px);
 }
 
 table {
@@ -123,6 +152,7 @@ tbody tr:hover {
     cursor: pointer;
 }
 
+/* --- Cabeçalho Fixo --- */
 thead th {
     position: sticky;
     top: 0;
@@ -146,7 +176,7 @@ thead th {
         pointer-events: none;
     }
 
-/* --- Cores --- */
+/* --- Cores Específicas --- */
 .dia-sab, .dia-dom, .dia-feriado {
     color: var(--weekend-color);
     font-weight: 700;
@@ -191,7 +221,9 @@ thead th {
     font-size: 0.9rem;
 }
 
-/* --- Comparação --- */
+/* =========================================
+   COMPARAÇÃO
+   ========================================= */
 .compare-controls {
     display: flex;
     align-items: flex-end;
@@ -201,6 +233,7 @@ thead th {
     background-color: #fff;
     border-radius: 8px;
     border: 1px solid var(--border-color);
+    flex-shrink: 0; /* Não deixa os controles encolherem */
 }
 
 .compare-group {
@@ -225,17 +258,9 @@ thead th {
         color: #4b5563;
     }
 
-.controls-select {
-    flex: 1;
-    height: 40px;
-    padding: 5px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    background-color: #f1f1f1;
-    font-size: 16px;
-}
-
-/* --- Menu Inferior --- */
+/* =========================================
+   MENU INFERIOR (Bottom Nav)
+   ========================================= */
 .bottom-nav {
     position: fixed;
     bottom: 0;
@@ -275,7 +300,9 @@ thead th {
     margin-bottom: 2px;
 }
 
-/* --- Componentes --- */
+/* =========================================
+   BOTÕES E MODAL
+   ========================================= */
 .btn-reset {
     background-color: #d32f2f;
     color: white;
@@ -310,16 +337,13 @@ thead th {
 }
 
 /* --- Botões Flutuantes (FAB) --- */
-
-/* Container para organizar (opcional, mas bom para garantir z-index) */
 #fab-container {
     z-index: 1000;
 }
 
-/* 1. Botão Principal (Calendário) - Fica embaixo */
 .fab-main {
     position: fixed;
-    bottom: 85px; /* Altura base acima do menu */
+    bottom: 85px;
     right: 20px;
     width: 56px;
     height: 56px;
@@ -341,10 +365,9 @@ thead th {
         transform: scale(0.95);
     }
 
-/* 2. Estilo Base para Botões Menores */
 .fab-mini {
     position: fixed;
-    right: 28px; /* Alinhado ao centro do botão maior */
+    right: 28px;
     width: 40px;
     height: 40px;
     border-radius: 50%;
@@ -353,7 +376,7 @@ thead th {
     border: 1px solid #ddd;
     box-shadow: 0 2px 5px rgba(0,0,0,0.2);
     font-size: 1.2rem;
-    display: flex; /* Importante: display flex para centralizar ícone */
+    display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
@@ -364,26 +387,21 @@ thead th {
         background-color: #f0f0f0;
     }
 
-/* 3. Posicionamento Específico (A Pilha) */
-
-/* Botão "Hoje" (📍) - Fica logo acima do Calendário */
 #fab-today {
     bottom: 155px;
 }
 
-/* Botão "Configurar Comparação" (🎚️) - Fica logo acima do Hoje */
 #fab-compare {
-    bottom: 210px; /* 155px + 40px (altura) + 15px (espaço) */
-    display: none; /* Começa invisível */
+    bottom: 210px;
+    display: none;
 }
 
-/* Esconde tudo na tela de configurações */
 #settings-view .fab-main,
 #settings-view .fab-mini {
     display: none !important;
 }
 
-/* Modal */
+/* --- Modal --- */
 .modal-overlay {
     position: fixed;
     top: 0;
@@ -427,6 +445,35 @@ thead th {
     margin-bottom: 20px;
 }
 
+.modal-body {
+    display: flex;
+    gap: 10px;
+    justify-content: space-between;
+    margin-bottom: 25px;
+}
+
+.input-group {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+}
+
+    .input-group label {
+        font-size: 0.75rem;
+        color: #666;
+        margin-bottom: 4px;
+        font-weight: 600;
+    }
+
+.modal-select {
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    background: #f9f9f9;
+    font-size: 1rem;
+    width: 100%;
+}
+
 .modal-footer {
     display: flex;
     justify-content: flex-end;
@@ -451,7 +498,9 @@ thead th {
     color: white;
 }
 
-/* Calendário */
+/* =========================================
+   CALENDÁRIO VISUAL
+   ========================================= */
 .calendar-wrapper {
     width: 100%;
     margin-bottom: 20px;
@@ -536,13 +585,14 @@ thead th {
 }
 
 .month-picker-item, .year-picker-item {
-    padding: 12px 5px;
+    padding: 15px 5px;
     text-align: center;
     border-radius: 8px;
     cursor: pointer;
     font-size: 0.9rem;
     font-weight: 600;
     border: 1px solid #eee;
+    transition: all 0.2s;
 }
 
     .month-picker-item:hover, .year-picker-item:hover {
@@ -590,7 +640,9 @@ thead th {
         font-weight: bold;
     }
 
-/* Mobile */
+/* =========================================
+   RESPONSIVIDADE (MOBILE)
+   ========================================= */
 @media (max-width: 768px) {
     body {
         padding: 10px;
@@ -607,6 +659,18 @@ thead th {
         font-size: 0.9rem;
     }
 
+    .controls-header {
+        flex-direction: column;
+        align-items: stretch;
+        padding: 3px;
+    }
+
+        .controls-header > div {
+            display: flex;
+            gap: 10px;
+            justify-content: space-between;
+        }
+
     .controls-select, .controls-button {
         flex: 1;
         max-width: none;
@@ -621,6 +685,8 @@ thead th {
 
     th {
         font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
     }
 
     .compare-controls {
@@ -630,5 +696,11 @@ thead th {
 
     .compare-group {
         width: 100%;
+    }
+
+    #compareButton {
+        width: 100%;
+        margin-top: 10px;
+        padding: 12px;
     }
 }
