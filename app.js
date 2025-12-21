@@ -608,19 +608,27 @@ async function hardReset() {
 
 // --- FUNÇÃO MAIN ---
 function init() {
-    // Esses selects antigos podem não existir mais no HTML, então verificamos
+    // 1. Configuração dos Selects (Mês/Ano)
     const mSel = document.getElementById('globalMonth');
     const ySel = document.getElementById('globalYear');
     if (mSel && ySel) {
+        // Limpa opções antigas para não duplicar se o init rodar 2x
+        mSel.innerHTML = '';
+        ySel.innerHTML = '';
+
         MONTH_NAMES.forEach((n, i) => mSel.add(new Option(n, i)));
         for (let y = 2024; y <= 2030; y++) ySel.add(new Option(y, y));
     }
 
+    // 2. Configuração dos Selects de Comparação
     const cTab1 = document.getElementById('compareTabela1');
     const cTab2 = document.getElementById('compareTabela2');
     [cTab1, cTab2].forEach(s => {
-        s.add(new Option('Turno PUMA', 'puma'));
-        s.add(new Option('Turno Monte Alegre', 'ma'));
+        if (s) {
+            s.innerHTML = ''; // Limpa antes de adicionar
+            s.add(new Option('Turno PUMA', 'puma'));
+            s.add(new Option('Turno Monte Alegre', 'ma'));
+        }
     });
 
     updateCompareLetras();
@@ -631,8 +639,25 @@ function init() {
     updateSelectors();
     setupInfiniteScroll();
 
-    const btnPuma = document.querySelector('button[onclick*="puma"]');
-    if (btnPuma) btnPuma.click();
+    // ============================================================
+    // CORREÇÃO AQUI: Adicionando os cliques via JS e Iniciando
+    // ============================================================
+
+    // Pegamos os botões pelos IDs novos que você colocou no HTML
+    const btnPuma = document.getElementById('btn-puma');
+    const btnMa = document.getElementById('btn-ma');
+    const btnCompare = document.getElementById('btn-comparar');
+
+    // Adicionamos os eventos (Ouvintes)
+    if (btnPuma) btnPuma.addEventListener('click', (e) => openTab(e, 'puma'));
+    if (btnMa) btnMa.addEventListener('click', (e) => openTab(e, 'monte-alegre'));
+    if (btnCompare) btnCompare.addEventListener('click', (e) => openTab(e, 'comparar'));
+
+    // AUTO-START: Clicamos no botão PUMA para abrir a primeira aba
+    // Antes o código buscava por 'onclick', agora usamos a variável direta
+    if (btnPuma) {
+        btnPuma.click();
+    }
 
     setTimeout(() => {
         goToToday();
