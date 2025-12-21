@@ -1,24 +1,27 @@
 :root {
-    /* Cores Gerais */
+    /* --- Cores Gerais --- */
     --bg-color: #f4f7f6;
     --text-color: #1f2937;
     --border-color: #ddd;
-    /* Cores de Cabeçalho e Texto */
+    /* --- Cabeçalhos --- */
     --header-bg: #1B5E20;
     --header-text: #C8E6C9;
     --table-header-bg: #333;
     --table-header-text: #f0f0f0;
-    /* Cores da Tabela */
+    /* --- Tabela --- */
     --stripe-color: #f9f9f9;
     --weekend-color: #d9534f;
     --holiday-color: #d9534f;
-    /* Cores dos Turnos (PUMA) */
+    /* --- Turnos (PUMA) --- */
     --puma-f-color: #00B050;
     --puma-0-color: #0070C0;
     --puma-8-color: #E36C0A;
     --puma-16-color: #5A2D82;
 }
 
+/* =========================================
+   RESET E BASE
+   ========================================= */
 * {
     box-sizing: border-box;
     margin: 0;
@@ -32,18 +35,19 @@ body {
     display: flex;
     justify-content: center;
     padding: 20px;
-    padding-bottom: 50px; /* Espaço para o menu inferior */
+    padding-bottom: 80px; /* Espaço para o menu inferior */
 }
 
 h2 {
-    padding: 5px;
+    padding: 12px;
     text-align: center;
     color: var(--header-text);
     text-transform: uppercase;
 }
 
-/* --- LAYOUT E NAVEGAÇÃO SUPERIOR --- */
-
+/* =========================================
+   LAYOUT E ABAS
+   ========================================= */
 .container {
     width: 100%;
     max-width: 950px;
@@ -83,8 +87,9 @@ h2 {
         display: block;
     }
 
-/* --- CONTROLES (DATA/SELECTS) --- */
-
+/* =========================================
+   CONTROLES LEGADOS (Compatibilidade)
+   ========================================= */
 .controls-header {
     display: flex;
     justify-content: space-between;
@@ -104,7 +109,6 @@ h2 {
     border: 1px solid #ccc;
     border-radius: 4px;
     background-color: #f1f1f1;
-   
     line-height: 1;
 }
 
@@ -116,8 +120,9 @@ h2 {
         background-color: #A1A1A1;
     }
 
-/* --- ESTRUTURA DA TABELA --- */
-
+/* =========================================
+   TABELAS
+   ========================================= */
 .table-container {
     overflow-y: auto;
     overflow-x: hidden;
@@ -146,37 +151,32 @@ tbody tr:hover {
     cursor: pointer;
 }
 
-/* --- CABEÇALHOS E RODAPÉS FIXOS (STICKY) --- */
-
+/* --- Cabeçalho Fixo (Sticky) --- */
 thead th {
     position: sticky;
+    top: 0;
     z-index: 50;
     background-color: var(--table-header-bg);
     color: var(--table-header-text);
-    border: none; /* Remove borda nativa para evitar bugs de scroll */
-    transform: translateZ(10); /* Força renderização em camada separada */
+    border: none;
+    transform: translateZ(10);
     background-clip: padding-box;
 }
 
-thead th {
-    top: 0;
-}
-
-    /* Borda Falsa (Pseudo-elemento) para corrigir visual */
-    thead th::after{
+    /* Borda Falsa para corrigir visual do sticky */
+    thead th::after {
         content: "";
         position: absolute;
         top: 0;
         left: 0;
         right: 0;
         bottom: 0;
-        border: 1px solid #ccc; /* Ajuste aqui a cor/espessura da borda fixa */
+        border: 1px solid #ccc;
         z-index: 100;
         pointer-events: none;
     }
 
-/* --- ESTILOS DE TEXTO E CORES ESPECÍFICAS --- */
-
+/* --- Cores Específicas --- */
 .dia-sab, .dia-dom, .dia-feriado {
     color: var(--weekend-color);
     font-weight: 700;
@@ -215,14 +215,15 @@ thead th {
     color: #37474f;
     font-weight: 800;
     text-align: left;
-    padding: 10px 10px;
+    padding: 10px;
     text-transform: uppercase;
     border-top: 2px solid #cfd8dc;
     font-size: 0.9rem;
 }
 
-/* --- TELA DE COMPARAÇÃO --- */
-
+/* =========================================
+   COMPARAÇÃO
+   ========================================= */
 .compare-controls {
     display: flex;
     align-items: flex-end;
@@ -239,7 +240,7 @@ thead th {
     display: flex;
     gap: 10px;
     background: #f9f9f9;
-    padding: 2px;
+    padding: 5px;
     border-radius: 8px;
 }
 
@@ -256,8 +257,9 @@ thead th {
         color: #4b5563;
     }
 
-/* --- MENU INFERIOR FIXO --- */
-
+/* =========================================
+   MENU INFERIOR (Bottom Nav)
+   ========================================= */
 .bottom-nav {
     position: fixed;
     bottom: 0;
@@ -297,8 +299,11 @@ thead th {
     margin-bottom: 2px;
 }
 
-/* --- BOTÕES E ANIMAÇÕES --- */
+/* =========================================
+   BOTÕES E MODAL
+   ========================================= */
 
+/* Botão Reset */
 .btn-reset {
     background-color: #d32f2f;
     color: white;
@@ -318,6 +323,7 @@ thead th {
         transform: scale(0.98);
     }
 
+/* Animação de Flash */
 @keyframes flash-row {
     0% {
         background-color: #ffeb3b;
@@ -332,112 +338,10 @@ thead th {
     animation: flash-row 2s ease-out;
 }
 
-/* --- RESPONSIVIDADE (MOBILE) --- */
-
-@media (max-width: 768px) {
-    body {
-        padding: 10px;
-        padding-bottom: 80px;
-    }
-
-    h2 {
-        font-size: 1.2rem;
-        padding: 5px;
-    }
-
-    .tab-button {
-        padding: 3px;
-    }
-        .controls-header {
-            flex-direction: column;
-            align-items: stretch;
-            padding: 3px;
-        }
-
-            .controls-header > div {
-                display: flex;
-                gap: 10px;
-                justify-content: space-between;
-
-            }
-
-    .controls-select, .controls-button {
-        flex: 1;
-        max-width: 100px;
-        max-height: 30px;
-        font-size: 16px;
-        padding: 3px;
-    }
-
-        th, td {
-            padding: 8px 4px;
-            font-size: 0.85rem;
-        }
-
-        th {
-            font-size: 0.75rem;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .compare-controls {
-            flex-direction: column;
-            align-items: stretch;
-        }
-
-        .compare-group {
-            width: 100%;
-        }
-
-        #compareButton {
-            width: 100%;
-            margin-top: 10px;
-            padding: 12px;
-        }
-    }
-
-.fab-today {
-    position: fixed;
-    /* Calcula: Altura do menu (65px) + Espaço de respiro (20px) */
-    bottom: 85px;
-    right: 20px;
-    width: 56px;
-    height: 56px;
-    border-radius: 50%; /* Faz ficar perfeitamente redondo */
-
-    background-color: var(--header-bg); /* Verde do tema */
-    color: white;
-    border: none;
-    /* Sombra para dar efeito de "flutuando" */
-    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-    font-size: 1.5rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    z-index: 1000; /* Garante que fique acima da tabela */
-
-    transition: transform 0.2s, background-color 0.2s, box-shadow 0.2s;
-}
-
-    /* Efeito ao clicar */
-    .fab-today:active {
-        transform: scale(0.90); /* Diminui um pouco */
-        background-color: #004D40; /* Verde mais escuro */
-    }
-
-/* Esconde o botão se estiver na tela de configurações */
-#settings-view .fab-today {
-    display: none;
-}
-/* =========================================
-   NOVO: ESTILOS DO MODAL E BOTÕES FLUTUANTES
-   ========================================= */
-
-/* Botão Principal (Data - Calendário) */
+/* --- Botões Flutuantes (FAB) --- */
 .fab-main {
     position: fixed;
-    bottom: 85px; /* Acima do menu inferior */
+    bottom: 85px;
     right: 20px;
     width: 56px;
     height: 56px;
@@ -459,11 +363,10 @@ thead th {
         transform: scale(0.95);
     }
 
-/* Botão Secundário (Hoje - Pin) */
 .fab-mini {
     position: fixed;
-    bottom: 155px; /* Acima do botão principal */
-    right: 28px; /* Centralizado com o de baixo */
+    bottom: 155px;
+    right: 28px;
     width: 40px;
     height: 40px;
     border-radius: 50%;
@@ -483,13 +386,12 @@ thead th {
         background-color: #f0f0f0;
     }
 
-/* Esconde na tela de configurações */
 #settings-view .fab-main,
 #settings-view .fab-mini {
     display: none;
 }
 
-/* Estilos do Modal */
+/* --- Modal --- */
 .modal-overlay {
     position: fixed;
     top: 0;
@@ -587,16 +489,14 @@ thead th {
 }
 
 /* =========================================
-   ESTILOS DO NOVO CALENDÁRIO (GRID)
+   CALENDÁRIO VISUAL
    ========================================= */
-
 .calendar-wrapper {
     width: 100%;
     margin-bottom: 20px;
-    user-select: none; /* Impede seleção de texto ao clicar rápido */
+    user-select: none;
 }
 
-/* Cabeçalho (Mês e Setas) */
 .calendar-header {
     display: flex;
     justify-content: space-between;
@@ -621,7 +521,6 @@ thead th {
         background-color: #eee;
     }
 
-/* Dias da Semana (Dom, Seg...) */
 .calendar-weekdays {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
@@ -632,57 +531,20 @@ thead th {
     margin-bottom: 10px;
 }
 
-/* Grid Numérico */
-.calendar-days {
+/* Área de Conteúdo (onde ficam os dias/meses/anos) */
+.calendar-content {
+    min-height: 220px;
+}
+
+/* Grid de Dias */
+.days-grid {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
     gap: 5px;
     text-align: center;
 }
 
-/* Cada dia individual */
-.calendar-day {
-    height: 36px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 0.9rem;
-    cursor: pointer;
-    border-radius: 50%; /* Bolinha */
-    transition: background 0.2s;
-    color: var(--text-color);
-}
-
-    .calendar-day:hover {
-        background-color: #f0f0f0;
-    }
-
-    /* Dia Vazio (espaço antes do dia 1) */
-    .calendar-day.empty {
-        cursor: default;
-        pointer-events: none;
-    }
-
-    /* Dia Selecionado (Bolinha Verde) */
-    .calendar-day.selected {
-        background-color: var(--header-bg); /* Verde PUMA */
-        color: white;
-        font-weight: bold;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-    }
-
-    /* Dia de "Hoje" (Bordinha sutil se não estiver selecionado) */
-    .calendar-day.today:not(.selected) {
-        border: 1px solid var(--header-bg);
-        color: var(--header-bg);
-        font-weight: bold;
-    }
-
-/* =========================================
-   ESTILOS DO SELETOR DE MÊS/ANO
-   ========================================= */
-
-/* Título clicável (Mês e Ano) */
+/* Títulos Clicáveis (Mês/Ano) */
 .calendar-title-group {
     display: flex;
     gap: 8px;
@@ -701,12 +563,7 @@ thead th {
         text-decoration: underline;
     }
 
-/* Área de Conteúdo (onde ficam os dias/meses/anos) */
-.calendar-content {
-    min-height: 220px; /* Mantém altura fixa para o modal não ficar pulando */
-}
-
-/* GRID DE MESES (3 colunas x 4 linhas) */
+/* Grid de Meses */
 .month-picker-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -736,7 +593,7 @@ thead th {
         border-color: var(--header-bg);
     }
 
-/* GRID DE ANOS (4 colunas) */
+/* Grid de Anos */
 .year-picker-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
@@ -764,10 +621,102 @@ thead th {
         color: white;
     }
 
-/* REUTILIZAÇÃO DO GRID DE DIAS (Mantém o estilo anterior) */
-.days-grid {
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    gap: 5px;
-    text-align: center;
+/* Estilo Individual dos Dias */
+.calendar-day {
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.9rem;
+    cursor: pointer;
+    border-radius: 50%;
+    transition: background 0.2s;
+    color: var(--text-color);
+}
+
+    .calendar-day:hover {
+        background-color: #f0f0f0;
+    }
+
+    .calendar-day.empty {
+        cursor: default;
+        pointer-events: none;
+    }
+
+    .calendar-day.selected {
+        background-color: var(--header-bg);
+        color: white;
+        font-weight: bold;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    }
+
+    .calendar-day.today:not(.selected) {
+        border: 1px solid var(--header-bg);
+        color: var(--header-bg);
+        font-weight: bold;
+    }
+
+/* =========================================
+   RESPONSIVIDADE (MOBILE)
+   ========================================= */
+@media (max-width: 768px) {
+    body {
+        padding: 10px;
+        padding-bottom: 80px;
+    }
+
+    h2 {
+        font-size: 1.2rem;
+        padding: 5px;
+    }
+
+    .tab-button {
+        padding: 8px;
+        font-size: 0.9rem;
+    }
+
+    .controls-header {
+        flex-direction: column;
+        align-items: stretch;
+        padding: 3px;
+    }
+
+        .controls-header > div {
+            display: flex;
+            gap: 10px;
+            justify-content: space-between;
+        }
+
+    .controls-select, .controls-button {
+        flex: 1;
+        max-width: none;
+        font-size: 16px;
+        padding: 8px;
+    }
+
+    th, td {
+        padding: 8px 4px;
+        font-size: 0.85rem;
+    }
+
+    th {
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .compare-controls {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .compare-group {
+        width: 100%;
+    }
+
+    #compareButton {
+        width: 100%;
+        margin-top: 10px;
+        padding: 12px;
+    }
 }

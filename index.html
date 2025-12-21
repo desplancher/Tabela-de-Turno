@@ -26,16 +26,6 @@
             <button class="tab-button" onclick="openTab(event, 'comparar')">Comparar</button>
         </div>
 
-        <div class="controls-header" style="display: none;">
-
-            <select class="controls-select" id="globalMonth" ></select>
-            <select class="controls-select" id="globalYear"></select>
-        </div>
-
-        <button class="fab-today" onclick="goToToday()" aria-label="Ir para Hoje">
-            📍
-        </button>
-
         <div id="puma" class="tab-content">
             <h2 class="puma-header">Tabela PUMA</h2>
             <div class="table-container">
@@ -125,23 +115,7 @@
             <div class="modal-content">
                 <h3>Selecionar Data</h3>
 
-                <div class="modal-body" style="display: none;">
-                    <div class="input-group">
-                        <label>Dia</label>
-                        <select id="modalDay" class="modal-select"></select>
-                    </div>
-                    <div class="input-group">
-                        <label>Mês</label>
-                        <select id="modalMonth" class="modal-select" onchange="updateModalDays()"></select>
-                    </div>
-                    <div class="input-group">
-                        <label>Ano</label>
-                        <select id="modalYear" class="modal-select" onchange="updateModalDays()"></select>
-                    </div>
-                </div>
-
                 <div class="calendar-wrapper">
-
                     <div class="calendar-header">
                         <button class="cal-nav-btn" onclick="changeCalendarPage(-1)">❮</button>
 
@@ -158,8 +132,8 @@
                     </div>
 
                     <div class="calendar-content" id="calendarGrid"></div>
-
                 </div>
+
                 <div class="modal-footer">
                     <button class="btn-cancel" onclick="closeDateModal()">Cancelar</button>
                     <button class="btn-confirm" onclick="confirmDate()">Ir</button>
@@ -174,9 +148,8 @@
         <button class="fab-mini" onclick="goToToday()" aria-label="Ir para Hoje">
             📍
         </button>
-    </div>
 
-    <div class="container" id="settings-view" style="display: none;">
+    </div> <div class="container" id="settings-view" style="display: none;">
         <h2 style="background-color: #455A64;">Configurações</h2>
 
         <div style="padding: 20px; text-align: center;">
