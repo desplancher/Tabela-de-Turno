@@ -541,13 +541,18 @@ thead th {
     margin-bottom: 10px;
 }
 
+/* CORREÇÃO: Altura Fixa para o Modal */
 .calendar-content {
-    min-height: 220px;
+    height: 260px; /* Altura fixa suficiente para 6 semanas */
+    overflow: hidden;
 }
 
+/* Grid de Dias */
 .days-grid {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
+    /* CORREÇÃO: Força sempre 6 linhas para não pular tamanho */
+    grid-template-rows: repeat(6, 1fr);
     gap: 5px;
     text-align: center;
 }
@@ -585,7 +590,7 @@ thead th {
 }
 
 .month-picker-item, .year-picker-item {
-    padding: 15px 5px;
+    padding: 12px 5px;
     text-align: center;
     border-radius: 8px;
     cursor: pointer;
