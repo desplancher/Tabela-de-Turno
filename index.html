@@ -53,24 +53,6 @@
 
         <div id="comparar" class="tab-content">
             <h2 class="compare-header">Comparar Escalas</h2>
-            <div class="compare-controls" onchange="renderTableCompare()">
-                <div class="compare-group">
-                    <div class="field-item">
-                        <label>Tabela 1:</label><select class="controls-select" id="compareTabela1"></select>
-                    </div>
-                    <div class="field-item">
-                        <label>Letra:</label><select class="controls-select" id="compareLetra1"></select>
-                    </div>
-                </div>
-                <div class="compare-group">
-                    <div class="field-item">
-                        <label>Tabela 2:</label><select class="controls-select" id="compareTabela2"></select>
-                    </div>
-                    <div class="field-item">
-                        <label>Letra:</label><select class="controls-select" id="compareLetra2"></select>
-                    </div>
-                </div>
-            </div>
             <div class="table-container">
                 <table>
                     <thead>
@@ -107,9 +89,52 @@
         </div>
     </div>
 
+    <div id="compare-modal" class="modal-overlay" style="display: none;">
+        <div class="modal-content">
+            <h3>Configurar Comparação</h3>
+
+            <div class="modal-body" style="flex-direction: column;">
+                <div style="background: #f5f5f5; padding: 10px; border-radius: 8px; margin-bottom: 10px;">
+                    <div class="input-group" style="margin-bottom: 10px;">
+                        <label>Tabela 1</label>
+                        <select class="modal-select" id="compareTabela1" onchange="renderTableCompare()"></select>
+                    </div>
+                    <div class="input-group">
+                        <label>Letra / Turma</label>
+                        <select class="modal-select" id="compareLetra1" onchange="renderTableCompare()"></select>
+                    </div>
+                </div>
+
+                <div style="background: #f5f5f5; padding: 10px; border-radius: 8px;">
+                    <div class="input-group" style="margin-bottom: 10px;">
+                        <label>Tabela 2</label>
+                        <select class="modal-select" id="compareTabela2" onchange="renderTableCompare()"></select>
+                    </div>
+                    <div class="input-group">
+                        <label>Letra / Turma</label>
+                        <select class="modal-select" id="compareLetra2" onchange="renderTableCompare()"></select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn-confirm" onclick="closeCompareModal()" style="width: 100%;">Concluído</button>
+            </div>
+        </div>
+    </div>
+
     <div id="fab-container">
-        <button class="fab-main" onclick="openDateModal()" aria-label="Escolher Data">📅</button>
-        <button class="fab-mini" onclick="goToToday()" aria-label="Ir para Hoje">📍</button>
+        <button id="fab-compare" class="fab-mini" onclick="openCompareModal()" aria-label="Configurar Comparação">
+            🎚️
+        </button>
+
+        <button id="fab-today" class="fab-mini" onclick="goToToday()" aria-label="Ir para Hoje">
+            📍
+        </button>
+
+        <button class="fab-main" onclick="openDateModal()" aria-label="Escolher Data">
+            📅
+        </button>
     </div>
 
     <div class="container" id="settings-view" style="display: none;">
@@ -135,8 +160,7 @@
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('./sw.js')
-                    .then((reg) => console.log('SW registrado', reg))
-                    .catch((err) => console.log('Erro SW:', err));
+                    .catch((err) => console.log('Falha ao registrar SW:', err));
             });
         }
     </script>

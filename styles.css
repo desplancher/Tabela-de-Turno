@@ -1,4 +1,4 @@
-:root {
+﻿:root {
     --bg-color: #f4f7f6;
     --text-color: #1f2937;
     --border-color: #ddd;
@@ -191,7 +191,7 @@ thead th {
     font-size: 0.9rem;
 }
 
-/* --- Compara��o --- */
+/* --- Comparação --- */
 .compare-controls {
     display: flex;
     align-items: flex-end;
@@ -309,10 +309,17 @@ thead th {
     animation: flash-row 2s ease-out;
 }
 
-/* FABs */
+/* --- Botões Flutuantes (FAB) --- */
+
+/* Container para organizar (opcional, mas bom para garantir z-index) */
+#fab-container {
+    z-index: 1000;
+}
+
+/* 1. Botão Principal (Calendário) - Fica embaixo */
 .fab-main {
     position: fixed;
-    bottom: 85px;
+    bottom: 85px; /* Altura base acima do menu */
     right: 20px;
     width: 56px;
     height: 56px;
@@ -334,10 +341,10 @@ thead th {
         transform: scale(0.95);
     }
 
+/* 2. Estilo Base para Botões Menores */
 .fab-mini {
     position: fixed;
-    bottom: 155px;
-    right: 28px;
+    right: 28px; /* Alinhado ao centro do botão maior */
     width: 40px;
     height: 40px;
     border-radius: 50%;
@@ -346,7 +353,7 @@ thead th {
     border: 1px solid #ddd;
     box-shadow: 0 2px 5px rgba(0,0,0,0.2);
     font-size: 1.2rem;
-    display: flex;
+    display: flex; /* Importante: display flex para centralizar ícone */
     align-items: center;
     justify-content: center;
     cursor: pointer;
@@ -357,8 +364,23 @@ thead th {
         background-color: #f0f0f0;
     }
 
-#settings-view .fab-main, #settings-view .fab-mini {
-    display: none;
+/* 3. Posicionamento Específico (A Pilha) */
+
+/* Botão "Hoje" (📍) - Fica logo acima do Calendário */
+#fab-today {
+    bottom: 155px;
+}
+
+/* Botão "Configurar Comparação" (🎚️) - Fica logo acima do Hoje */
+#fab-compare {
+    bottom: 210px; /* 155px + 40px (altura) + 15px (espaço) */
+    display: none; /* Começa invisível */
+}
+
+/* Esconde tudo na tela de configurações */
+#settings-view .fab-main,
+#settings-view .fab-mini {
+    display: none !important;
 }
 
 /* Modal */
@@ -429,7 +451,7 @@ thead th {
     color: white;
 }
 
-/* Calend�rio */
+/* Calendário */
 .calendar-wrapper {
     width: 100%;
     margin-bottom: 20px;

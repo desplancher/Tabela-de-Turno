@@ -3,11 +3,13 @@
 // ============================================================================
 const MONTH_NAMES = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
 const DAY_NAMES = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
-const TODAY = new Date(); TODAY.setHours(0, 0, 0, 0);
+const TODAY = new Date();
+TODAY.setHours(0, 0, 0, 0);
 
 let globalCurrentDate = new Date();
 let holidayCache = {};
 
+// Dados da Tabela PUMA
 const PUMA_ANCHOR_DATE = new Date(2025, 0, 1);
 const PUMA_CYCLES = {
     A: ['F', '0', '0', '8', '8', '8', 'F', 'F', 'F', '16', '16', '16', 'F', '0', '0', '8', '8', 'F', 'F', 'F', 'F', '16', '16', 'F', '0', '0', '0', '8', '8', 'F', 'F', 'F', 'F', '16', '16'],
@@ -17,6 +19,7 @@ const PUMA_CYCLES = {
     E: ['0', '8', '8', 'F', 'F', 'F', 'F', '16', '16', 'F', '0', '0', '0', '8', '8', 'F', 'F', 'F', 'F', '16', '16', 'F', '0', '0', '8', '8', '8', 'F', 'F', 'F', '16', '16', '16', 'F', '0']
 };
 
+// Dados da Tabela Monte Alegre
 const MA_ANCHOR_DATE = new Date(2025, 2, 15);
 const MA_SHIFT_CYCLE = ['F', 'F', 'F', 'F', '0', '0', '8', '8', '16', '16'];
 const MA_TEAM_OFFSETS = { A: 0, B: 4, C: 8, D: 6, E: 2 };
@@ -32,28 +35,45 @@ function toISODate(date) {
     return `${year}-${month}-${day}`;
 }
 
-function diffDays(d1, d2) { return Math.floor((d2 - d1) / (1000 * 60 * 60 * 24)); }
+function diffDays(d1, d2) {
+    return Math.floor((d2 - d1) / (1000 * 60 * 60 * 24));
+}
 
+// --- Cálculo de Feriados ---
 function getEaster(y) {
-    let f = Math.floor, c = f(y / 100), n = y - 19 * f(y / 19), k = f((c - 17) / 25), i = c - f(c / 4) - f((c - k) / 3) + 19 * n + 15;
-    i = i - 30 * f(i / 30); i = i - f(i / 28) * (1 - f(i / 28) * f(29 / (i + 1)) * f((21 - n) / 11));
-    let j = y + f(y / 4) + i + 2 - c + f(c / 4); j = j - 7 * f(j / 7);
-    let l = i - j, m = 3 + f((l + 40) / 44), d = l + 28 - 31 * f(m / 4); return new Date(y, m - 1, d);
+    let f = Math.floor,
+        c = f(y / 100),
+        n = y - 19 * f(y / 19),
+        k = f((c - 17) / 25),
+        i = c - f(c / 4) - f((c - k) / 3) + 19 * n + 15;
+    i = i - 30 * f(i / 30);
+    i = i - f(i / 28) * (1 - f(i / 28) * f(29 / (i + 1)) * f((21 - n) / 11));
+    let j = y + f(y / 4) + i + 2 - c + f(c / 4);
+    j = j - 7 * f(j / 7);
+    let l = i - j,
+        m = 3 + f((l + 40) / 44),
+        d = l + 28 - 31 * f(m / 4);
+    return new Date(y, m - 1, d);
 }
 
 function getHolidays(y) {
     if (holidayCache[y]) return holidayCache[y];
-    const h = {}; const add = (dt, nm) => h[toISODate(dt)] = nm;
+    const h = {};
+    const add = (dt, nm) => h[toISODate(dt)] = nm;
     const e = getEaster(y);
     add(new Date(y, 0, 1), "Ano Novo");
     add(new Date(y, 11, 25), "Natal");
     add(new Date(y, 4, 1), "Trabalho");
     add(new Date(y, 8, 7), "Independência");
-    holidayCache[y] = h; return h;
+    holidayCache[y] = h;
+    return h;
 }
 
-function isHoliday(d) { return getHolidays(d.getFullYear())[toISODate(d)] || null; }
+function isHoliday(d) {
+    return getHolidays(d.getFullYear())[toISODate(d)] || null;
+}
 
+// --- Cálculo de Turnos ---
 function getPumaShift(d, t) {
     const dDiff = diffDays(PUMA_ANCHOR_DATE, d);
     const idx = ((dDiff % 35) + 35) % 35;
@@ -66,10 +86,13 @@ function getMaShift(d, t) {
     return MA_SHIFT_CYCLE[idx];
 }
 
-const SHIFT_FUNCTIONS = { 'puma': getPumaShift, 'ma': getMaShift };
+const SHIFT_FUNCTIONS = {
+    'puma': getPumaShift,
+    'ma': getMaShift
+};
 
 // ============================================================================
-// 3. RENDERIZAÇÃO DAS TABELAS
+// 3. RENDERIZAÇÃO DAS TABELAS (CORE)
 // ============================================================================
 
 function renderTable(body, fn, teams, prefix) {
@@ -126,9 +149,14 @@ function renderTableCompare() {
     const t2 = document.getElementById('compareTabela2').value;
     const l2 = document.getElementById('compareLetra2').value;
 
-    const comparisonSources = [
-        { tabela: t1, letra: l1 },
-        { tabela: t2, letra: l2 }
+    const comparisonSources = [{
+        tabela: t1,
+        letra: l1
+    },
+    {
+        tabela: t2,
+        letra: l2
+    }
     ];
     renderTable(document.getElementById('compare-table-body'), null, comparisonSources, 'compare');
 }
@@ -144,9 +172,10 @@ function renderAll() {
 }
 
 // ============================================================================
-// 4. CALENDÁRIO VISUAL
+// 4. MODAIS (Data e Comparação)
 // ============================================================================
 
+// --- Modal de Data ---
 let calViewDate = new Date();
 let calSelectedDate = new Date();
 let calMode = 'days';
@@ -240,10 +269,7 @@ function renderMonthsGrid(container) {
 function renderYearsGrid(container) {
     container.className = 'year-picker-grid';
     const currentYear = calViewDate.getFullYear();
-    const startYear = currentYear - 5;
-    const endYear = currentYear + 6;
-
-    for (let y = startYear; y <= endYear; y++) {
+    for (let y = currentYear - 5; y <= currentYear + 6; y++) {
         const div = document.createElement('div');
         div.className = 'year-picker-item';
         div.innerText = y;
@@ -257,8 +283,15 @@ function renderYearsGrid(container) {
     }
 }
 
-function openMonthPicker() { calMode = (calMode === 'months') ? 'days' : 'months'; renderCalendar(); }
-function openYearPicker() { calMode = (calMode === 'years') ? 'days' : 'years'; renderCalendar(); }
+function openMonthPicker() {
+    calMode = (calMode === 'months') ? 'days' : 'months';
+    renderCalendar();
+}
+
+function openYearPicker() {
+    calMode = (calMode === 'years') ? 'days' : 'years';
+    renderCalendar();
+}
 
 function changeCalendarPage(delta) {
     if (calMode === 'days') calViewDate.setMonth(calViewDate.getMonth() + delta);
@@ -280,8 +313,20 @@ function confirmDate() {
     globalCurrentDate = new Date(calSelectedDate);
     closeDateModal();
 
-    setTimeout(() => { scrollToDate(globalCurrentDate); }, 100);
+    setTimeout(() => {
+        scrollToDate(globalCurrentDate);
+    }, 100);
     updateSelectors();
+}
+
+// --- NOVO: Modal de Comparação ---
+function openCompareModal() {
+    document.getElementById('compare-modal').style.display = 'flex';
+}
+
+function closeCompareModal() {
+    document.getElementById('compare-modal').style.display = 'none';
+    renderTableCompare(); // Garante atualização ao fechar
 }
 
 // ============================================================================
@@ -315,7 +360,6 @@ function getVisibleDateIso() {
 
 function scrollToDate(date, highlight = true) {
     const iso = toISODate(date);
-
     const activeTab = document.querySelector('.tab-content.active');
     if (!activeTab) return;
 
@@ -325,10 +369,11 @@ function scrollToDate(date, highlight = true) {
     else if (activeTab.id === 'comparar') prefix = 'compare';
 
     const el = document.getElementById(`${prefix}-date-${iso}`);
-
     if (el) {
-        el.scrollIntoView({ behavior: "auto", block: "center" });
-
+        el.scrollIntoView({
+            behavior: "auto",
+            block: "center"
+        });
         if (highlight) {
             el.classList.add('highlight-flash');
             setTimeout(() => el.classList.remove('highlight-flash'), 2500);
@@ -346,7 +391,6 @@ function goToToday() {
 function jumpToDate() {
     const y = parseInt(document.getElementById('globalYear').value);
     const m = parseInt(document.getElementById('globalMonth').value);
-
     if (y !== globalCurrentDate.getFullYear()) {
         globalCurrentDate.setFullYear(y);
         renderAll();
@@ -368,37 +412,40 @@ function updateSelectors() {
 function updateTabSlider() {
     const activeBtn = document.querySelector('.tab-button.active');
     const slider = document.querySelector('.tab-slider');
-
     if (activeBtn && slider) {
         slider.style.width = `${activeBtn.offsetWidth}px`;
         slider.style.left = `${activeBtn.offsetLeft}px`;
     }
 }
 
+// --- FUNÇÃO ATUALIZADA: Controla a visibilidade do botão de comparação ---
 function openTab(e, nm) {
     const currentIso = getVisibleDateIso();
-
     document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
     document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
 
-    const targetTab = document.getElementById(nm);
-    targetTab.classList.add('active');
+    document.getElementById(nm).classList.add('active');
 
-    if (e && e.currentTarget) {
-        e.currentTarget.classList.add('active');
-    } else {
+    if (e && e.currentTarget) e.currentTarget.classList.add('active');
+    else {
         const btn = document.querySelector(`button[onclick*="'${nm}'"]`);
         if (btn) btn.classList.add('active');
     }
 
     updateTabSlider();
 
-    if (nm === 'comparar') renderTableCompare();
+    // LÓGICA DO BOTÃO DE COMPARAÇÃO
+    const compareFab = document.getElementById('fab-compare');
+    if (nm === 'comparar') {
+        renderTableCompare();
+        if (compareFab) compareFab.style.display = 'flex'; // Use FLEX para manter centralizado
+    } else {
+        if (compareFab) compareFab.style.display = 'none';
+    }
 
     if (currentIso) {
         const [y, m, d] = currentIso.split('-').map(Number);
-        const dateObj = new Date(y, m - 1, d);
-        scrollToDate(dateObj, false);
+        scrollToDate(new Date(y, m - 1, d), false);
     }
 }
 
@@ -444,7 +491,6 @@ function loadSavedSettings() {
         const el = document.getElementById(id);
         if (savedValue && el) el.value = savedValue;
     });
-
     const savedM = localStorage.getItem('globalMonth');
     const savedY = localStorage.getItem('globalYear');
     if (savedM !== null && savedY !== null) {
@@ -463,7 +509,7 @@ function updateCompareLetras() {
 }
 
 async function hardReset() {
-    if (!confirm("Isso vai apagar os dados salvos e baixar a versão mais nova do app. Continuar?")) return;
+    if (!confirm("Resetar?")) return;
     if ('serviceWorker' in navigator) {
         const regs = await navigator.serviceWorker.getRegistrations();
         for (const reg of regs) await reg.unregister();
@@ -476,38 +522,30 @@ async function hardReset() {
     window.location.reload(true);
 }
 
-// --- FUNÇÃO MAIN ---
 function init() {
     const mSel = document.getElementById('globalMonth');
     const ySel = document.getElementById('globalYear');
-
     if (mSel && ySel) {
         MONTH_NAMES.forEach((n, i) => mSel.add(new Option(n, i)));
         for (let y = 2024; y <= 2030; y++) ySel.add(new Option(y, y));
     }
-
     const cTab1 = document.getElementById('compareTabela1');
     const cTab2 = document.getElementById('compareTabela2');
     [cTab1, cTab2].forEach(s => {
         s.add(new Option('Turno PUMA', 'puma'));
         s.add(new Option('Turno Monte Alegre', 'ma'));
     });
-
     updateCompareLetras();
     loadSavedSettings();
     setupAutoSave();
-
     renderAll();
     updateSelectors();
-
     const btnPuma = document.querySelector('button[onclick*="puma"]');
     if (btnPuma) btnPuma.click();
-
     setTimeout(() => {
         goToToday();
         updateTabSlider();
     }, 500);
-
     window.addEventListener('resize', updateTabSlider);
 }
 
