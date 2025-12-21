@@ -35,7 +35,7 @@ body {
     display: flex;
     justify-content: center;
     padding: 20px;
-    padding-bottom: 80px; /* Espaço para o menu inferior */
+    padding-bottom: 80px;
 }
 
 h2 {
@@ -46,7 +46,7 @@ h2 {
 }
 
 /* =========================================
-   LAYOUT E ABAS
+   LAYOUT E ABAS (COM SLIDER)
    ========================================= */
 .container {
     width: 100%;
@@ -57,9 +57,14 @@ h2 {
     overflow: hidden;
 }
 
+/* Container das abas FIXO no topo */
 .tab-container {
     display: flex;
     background-color: #e5e7eb;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
 .tab-button {
@@ -67,16 +72,29 @@ h2 {
     padding: 14px;
     border: none;
     cursor: pointer;
-    background: inherit;
+    background: transparent;
     color: #4b5563;
     font-weight: 500;
+    position: relative;
+    outline: none;
+    transition: color 0.3s;
 }
 
     .tab-button.active {
         background: #fff;
         color: #111827;
-        border-bottom: 3px solid var(--header-bg);
     }
+
+/* A Linha Deslizante */
+.tab-slider {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    height: 4px;
+    background-color: var(--header-bg);
+    transition: all 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
+    width: 0;
+}
 
 .tab-content {
     display: none;
@@ -88,46 +106,13 @@ h2 {
     }
 
 /* =========================================
-   CONTROLES LEGADOS (Compatibilidade)
-   ========================================= */
-.controls-header {
-    display: flex;
-    justify-content: space-between;
-    padding: 5px;
-    background: #fdfdfd;
-    border-bottom: 1px solid #ddd;
-    flex-wrap: wrap;
-    gap: 10px;
-}
-
-.controls-select,
-.controls-button {
-    box-sizing: border-box;
-    vertical-align: middle;
-    height: 40px;
-    padding: 5px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    background-color: #f1f1f1;
-    line-height: 1;
-}
-
-    .controls-button:hover {
-        background-color: #C2C2C2;
-    }
-
-    .controls-button:active {
-        background-color: #A1A1A1;
-    }
-
-/* =========================================
    TABELAS
    ========================================= */
 .table-container {
     overflow-y: auto;
     overflow-x: hidden;
     height: calc(100vh - 220px);
-    scroll-behavior: smooth;
+    /* Scroll instantâneo */
 }
 
 table {
@@ -151,7 +136,7 @@ tbody tr:hover {
     cursor: pointer;
 }
 
-/* --- Cabeçalho Fixo (Sticky) --- */
+/* --- Cabeçalho Fixo --- */
 thead th {
     position: sticky;
     top: 0;
@@ -163,7 +148,6 @@ thead th {
     background-clip: padding-box;
 }
 
-    /* Borda Falsa para corrigir visual do sticky */
     thead th::after {
         content: "";
         position: absolute;
@@ -302,8 +286,6 @@ thead th {
 /* =========================================
    BOTÕES E MODAL
    ========================================= */
-
-/* Botão Reset */
 .btn-reset {
     background-color: #d32f2f;
     color: white;
@@ -323,7 +305,6 @@ thead th {
         transform: scale(0.98);
     }
 
-/* Animação de Flash */
 @keyframes flash-row {
     0% {
         background-color: #ffeb3b;
@@ -435,35 +416,6 @@ thead th {
     margin-bottom: 20px;
 }
 
-.modal-body {
-    display: flex;
-    gap: 10px;
-    justify-content: space-between;
-    margin-bottom: 25px;
-}
-
-.input-group {
-    display: flex;
-    flex-direction: column;
-    flex: 1;
-}
-
-    .input-group label {
-        font-size: 0.75rem;
-        color: #666;
-        margin-bottom: 4px;
-        font-weight: 600;
-    }
-
-.modal-select {
-    padding: 8px;
-    border: 1px solid #ccc;
-    border-radius: 6px;
-    background: #f9f9f9;
-    font-size: 1rem;
-    width: 100%;
-}
-
 .modal-footer {
     display: flex;
     justify-content: flex-end;
@@ -531,12 +483,10 @@ thead th {
     margin-bottom: 10px;
 }
 
-/* Área de Conteúdo (onde ficam os dias/meses/anos) */
 .calendar-content {
     min-height: 220px;
 }
 
-/* Grid de Dias */
 .days-grid {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
@@ -544,7 +494,6 @@ thead th {
     text-align: center;
 }
 
-/* Títulos Clicáveis (Mês/Ano) */
 .calendar-title-group {
     display: flex;
     gap: 8px;
@@ -563,7 +512,6 @@ thead th {
         text-decoration: underline;
     }
 
-/* Grid de Meses */
 .month-picker-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -593,7 +541,6 @@ thead th {
         border-color: var(--header-bg);
     }
 
-/* Grid de Anos */
 .year-picker-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
@@ -621,7 +568,6 @@ thead th {
         color: white;
     }
 
-/* Estilo Individual dos Dias */
 .calendar-day {
     height: 36px;
     display: flex;

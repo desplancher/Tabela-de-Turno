@@ -24,6 +24,7 @@
             <button class="tab-button" onclick="openTab(event, 'puma')">Turno PUMA</button>
             <button class="tab-button" onclick="openTab(event, 'monte-alegre')">Turno Monte Alegre</button>
             <button class="tab-button" onclick="openTab(event, 'comparar')">Comparar</button>
+            <div class="tab-slider"></div>
         </div>
 
         <div id="puma" class="tab-content">
@@ -31,18 +32,9 @@
             <div class="table-container">
                 <table>
                     <thead>
-                        <tr>
-                            <th>Data</th>
-                            <th>Dia</th>
-                            <th>A</th>
-                            <th>B</th>
-                            <th>C</th>
-                            <th>D</th>
-                            <th>E</th>
-                        </tr>
+                        <tr><th>Data</th><th>Dia</th><th>A</th><th>B</th><th>C</th><th>D</th><th>E</th></tr>
                     </thead>
-                    <tbody id="puma-table-body">
-                    </tbody>
+                    <tbody id="puma-table-body"></tbody>
                 </table>
             </div>
         </div>
@@ -52,140 +44,97 @@
             <div class="table-container">
                 <table>
                     <thead>
-                        <tr>
-                            <th>Data</th>
-                            <th>Dia</th>
-                            <th>A</th>
-                            <th>B</th>
-                            <th>C</th>
-                            <th>D</th>
-                            <th>E</th>
-                        </tr>
+                        <tr><th>Data</th><th>Dia</th><th>A</th><th>B</th><th>C</th><th>D</th><th>E</th></tr>
                     </thead>
-                    <tbody id="ma-table-body">
-                    </tbody>
+                    <tbody id="ma-table-body"></tbody>
                 </table>
             </div>
         </div>
 
         <div id="comparar" class="tab-content">
             <h2 class="compare-header">Comparar Escalas</h2>
-
             <div class="compare-controls" onchange="renderTableCompare()">
                 <div class="compare-group">
                     <div class="field-item">
-                        <label for="compareTabela1">Tabela 1:</label>
-                        <select class="controls-select" id="compareTabela1"></select>
+                        <label>Tabela 1:</label><select class="controls-select" id="compareTabela1"></select>
                     </div>
                     <div class="field-item">
-                        <label for="compareLetra1">Letra:</label>
-                        <select class="controls-select" id="compareLetra1"></select>
+                        <label>Letra:</label><select class="controls-select" id="compareLetra1"></select>
                     </div>
                 </div>
-
                 <div class="compare-group">
                     <div class="field-item">
-                        <label for="compareTabela2">Tabela 2:</label>
-                        <select class="controls-select" id="compareTabela2"></select>
+                        <label>Tabela 2:</label><select class="controls-select" id="compareTabela2"></select>
                     </div>
                     <div class="field-item">
-                        <label for="compareLetra2">Letra:</label>
-                        <select class="controls-select" id="compareLetra2"></select>
+                        <label>Letra:</label><select class="controls-select" id="compareLetra2"></select>
                     </div>
                 </div>
             </div>
-
             <div class="table-container">
                 <table>
                     <thead>
-                        <tr>
-                            <th>Data</th>
-                            <th>Dia</th>
-                            <th>Fonte 1</th>
-                            <th>Fonte 2</th>
-                        </tr>
+                        <tr><th>Data</th><th>Dia</th><th>Fonte 1</th><th>Fonte 2</th></tr>
                     </thead>
-                    <tbody id="compare-table-body">
-                    </tbody>
+                    <tbody id="compare-table-body"></tbody>
                 </table>
             </div>
         </div>
 
-        <div id="date-modal" class="modal-overlay" style="display: none;">
-            <div class="modal-content">
-                <h3>Selecionar Data</h3>
+    </div>
 
-                <div class="calendar-wrapper">
-                    <div class="calendar-header">
-                        <button class="cal-nav-btn" onclick="changeCalendarPage(-1)">❮</button>
-
-                        <div class="calendar-title-group">
-                            <span id="calTitleMonth" class="cal-title-btn" onclick="openMonthPicker()">Mês</span>
-                            <span id="calTitleYear" class="cal-title-btn" onclick="openYearPicker()">Ano</span>
-                        </div>
-
-                        <button class="cal-nav-btn" onclick="changeCalendarPage(1)">❯</button>
+    <div id="date-modal" class="modal-overlay" style="display: none;">
+        <div class="modal-content">
+            <h3>Selecionar Data</h3>
+            <div class="calendar-wrapper">
+                <div class="calendar-header">
+                    <button class="cal-nav-btn" onclick="changeCalendarPage(-1)">❮</button>
+                    <div class="calendar-title-group">
+                        <span id="calTitleMonth" class="cal-title-btn" onclick="openMonthPicker()">Mês</span>
+                        <span id="calTitleYear" class="cal-title-btn" onclick="openYearPicker()">Ano</span>
                     </div>
-
-                    <div class="calendar-weekdays" id="calendarWeekdays">
-                        <div>Dom</div><div>Seg</div><div>Ter</div><div>Qua</div><div>Qui</div><div>Sex</div><div>Sáb</div>
-                    </div>
-
-                    <div class="calendar-content" id="calendarGrid"></div>
+                    <button class="cal-nav-btn" onclick="changeCalendarPage(1)">❯</button>
                 </div>
-
-                <div class="modal-footer">
-                    <button class="btn-cancel" onclick="closeDateModal()">Cancelar</button>
-                    <button class="btn-confirm" onclick="confirmDate()">Ir</button>
+                <div class="calendar-weekdays" id="calendarWeekdays">
+                    <div>Dom</div><div>Seg</div><div>Ter</div><div>Qua</div><div>Qui</div><div>Sex</div><div>Sáb</div>
                 </div>
+                <div class="calendar-content" id="calendarGrid"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-cancel" onclick="closeDateModal()">Cancelar</button>
+                <button class="btn-confirm" onclick="confirmDate()">Ir</button>
             </div>
         </div>
+    </div>
 
-        <button class="fab-main" onclick="openDateModal()" aria-label="Escolher Data">
-            📅
-        </button>
+    <div id="fab-container">
+        <button class="fab-main" onclick="openDateModal()" aria-label="Escolher Data">📅</button>
+        <button class="fab-mini" onclick="goToToday()" aria-label="Ir para Hoje">📍</button>
+    </div>
 
-        <button class="fab-mini" onclick="goToToday()" aria-label="Ir para Hoje">
-            📍
-        </button>
-
-    </div> <div class="container" id="settings-view" style="display: none;">
+    <div class="container" id="settings-view" style="display: none;">
         <h2 style="background-color: #455A64;">Configurações</h2>
-
         <div style="padding: 20px; text-align: center;">
-            <p style="color: #666; margin-bottom: 20px;">
-                Gerenciamento do Aplicativo
-            </p>
-
-            <button onclick="hardReset()" class="btn-reset">
-                ⚠️ Resetar e Atualizar App
-            </button>
-
-            <p style="font-size: 0.8rem; color: #999; margin-top: 30px;">
-                Versão 2.0.1
-            </p>
+            <p style="color: #666; margin-bottom: 20px;">Gerenciamento do Aplicativo</p>
+            <button onclick="hardReset()" class="btn-reset">⚠️ Resetar e Atualizar App</button>
+            <p style="font-size: 0.8rem; color: #999; margin-top: 30px;">Versão 2.0.1</p>
         </div>
     </div>
 
     <nav class="bottom-nav">
         <button class="nav-item active" onclick="switchView('home')">
-            <span class="nav-icon">🏠</span>
-            <span class="nav-text">Início</span>
+            <span class="nav-icon">🏠</span><span class="nav-text">Início</span>
         </button>
         <button class="nav-item" onclick="switchView('settings')">
-            <span class="nav-icon">⚙️</span>
-            <span class="nav-text">Ajustes</span>
+            <span class="nav-icon">⚙️</span><span class="nav-text">Ajustes</span>
         </button>
     </nav>
 
     <script src="app.js"></script>
-
     <script>
-        // Registro do Service Worker (PWA)
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('./sw.js')
-                    .then((reg) => console.log('Service Worker registrado!', reg))
                     .catch((err) => console.log('Falha ao registrar SW:', err));
             });
         }

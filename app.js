@@ -47,13 +47,11 @@ function getEaster(y) {
 function getHolidays(y) {
     if (holidayCache[y]) return holidayCache[y];
     const h = {}; const add = (dt, nm) => h[toISODate(dt)] = nm;
-    // Feriados Fixos e Móveis
     const e = getEaster(y);
     add(new Date(y, 0, 1), "Ano Novo");
     add(new Date(y, 11, 25), "Natal");
     add(new Date(y, 4, 1), "Trabalho");
     add(new Date(y, 8, 7), "Independência");
-    // Adicione outros feriados aqui se necessário
     holidayCache[y] = h; return h;
 }
 
@@ -78,8 +76,6 @@ const SHIFT_FUNCTIONS = { 'puma': getPumaShift, 'ma': getMaShift };
 // 3. RENDERIZAÇÃO DAS TABELAS (CORE)
 // ============================================================================
 
-// Renderiza a tabela anual completa
-// ADICIONADO: 'prefix' para criar IDs únicos por tabela
 function renderTable(body, fn, teams, prefix) {
     if (!body) return;
     body.innerHTML = '';
@@ -87,15 +83,12 @@ function renderTable(body, fn, teams, prefix) {
     const y = globalCurrentDate.getFullYear();
     const colSpan = teams.length + 2;
 
-    // Loop pelos 12 meses
     for (let m = 0; m < 12; m++) {
-        // Separador de Mês
         const trMonth = document.createElement('tr');
         trMonth.className = 'month-separator';
         trMonth.innerHTML = `<td colspan="${colSpan}">${MONTH_NAMES[m]} ${y}</td>`;
         body.appendChild(trMonth);
 
-        // Dias do Mês
         const lastDay = new Date(y, m + 1, 0).getDate();
         for (let i = 1; i <= lastDay; i++) {
             const d = new Date(y, m, i);
@@ -104,7 +97,6 @@ function renderTable(body, fn, teams, prefix) {
             const hol = isHoliday(d);
 
             const tr = document.createElement('tr');
-            // CORREÇÃO: ID Único usando o prefixo da tabela (ex: puma-date-2025-01-01)
             tr.id = `${prefix}-date-${iso}`;
 
             let html = `<td class="${hol ? 'dia-feriado' : (w == 0 || w == 6 ? 'dia-dom' : '')}">${d.toLocaleDateString('pt-BR')}</td>`;
@@ -123,7 +115,6 @@ function renderTable(body, fn, teams, prefix) {
 
             tr.innerHTML = html;
 
-            // Destaque para o dia de hoje
             if (d.getTime() === TODAY.getTime()) {
                 tr.style.border = "2px solid #1B5E20";
                 tr.style.fontWeight = "bold";
@@ -143,12 +134,10 @@ function renderTableCompare() {
         { tabela: t1, letra: l1 },
         { tabela: t2, letra: l2 }
     ];
-    // CORREÇÃO: Passa o prefixo 'compare'
     renderTable(document.getElementById('compare-table-body'), null, comparisonSources, 'compare');
 }
 
 function renderAll() {
-    // CORREÇÃO: Passa os prefixos corretos para cada tabela
     renderTable(document.getElementById('puma-table-body'), getPumaShift, ['A', 'B', 'C', 'D', 'E'], 'puma');
     renderTable(document.getElementById('ma-table-body'), getMaShift, ['A', 'B', 'C', 'D', 'E'], 'ma');
 
@@ -303,25 +292,52 @@ function confirmDate() {
 // 5. NAVEGAÇÃO E INTERFACE (SCROLL, ABAS, MENU)
 // ============================================================================
 
-// CORREÇÃO: Agora detecta a aba ativa e busca o ID correto (com prefixo)
-function scrollToDate(date) {
+function getVisibleDateIso() {
+    const activeContainer = document.querySelector('.tab-content.active .table-container');
+    if (!activeContainer) return null;
+
+    const targetY = activeContainer.scrollTop + (activeContainer.clientHeight / 2);
+    const rows = activeContainer.querySelectorAll('tr[id*="date-"]');
+
+    let bestRow = null;
+    let minDiff = Infinity;
+
+    for (let row of rows) {
+        const diff = Math.abs(row.offsetTop - targetY);
+        if (diff < minDiff) {
+            minDiff = diff;
+            bestRow = row;
+        }
+    }
+
+    if (bestRow) {
+        const match = bestRow.id.match(/date-(\d{4}-\d{2}-\d{2})/);
+        return match ? match[1] : null;
+    }
+    return null;
+}
+
+function scrollToDate(date, highlight = true) {
     const iso = toISODate(date);
 
-    // 1. Descobrir qual aba está ativa para saber qual prefixo usar
     const activeTab = document.querySelector('.tab-content.active');
-    let prefix = '';
+    if (!activeTab) return;
 
+    let prefix = '';
     if (activeTab.id === 'puma') prefix = 'puma';
     else if (activeTab.id === 'monte-alegre') prefix = 'ma';
     else if (activeTab.id === 'comparar') prefix = 'compare';
 
-    // 2. Busca o elemento pelo ID ÚNICO (ex: ma-date-2025-01-01)
     const el = document.getElementById(`${prefix}-date-${iso}`);
 
     if (el) {
-        el.scrollIntoView({ behavior: "smooth", block: "center" });
-        el.classList.add('highlight-flash');
-        setTimeout(() => el.classList.remove('highlight-flash'), 2500);
+        // SCROLL INSTANTÂNEO (behavior: auto)
+        el.scrollIntoView({ behavior: "auto", block: "center" });
+
+        if (highlight) {
+            el.classList.add('highlight-flash');
+            setTimeout(() => el.classList.remove('highlight-flash'), 2500);
+        }
     }
 }
 
@@ -354,18 +370,55 @@ function updateSelectors() {
     }
 }
 
+// Atualiza a posição da linha verde (Slider)
+function updateTabSlider() {
+    const activeBtn = document.querySelector('.tab-button.active');
+    const slider = document.querySelector('.tab-slider');
+
+    if (activeBtn && slider) {
+        slider.style.width = `${activeBtn.offsetWidth}px`;
+        slider.style.left = `${activeBtn.offsetLeft}px`;
+    }
+}
+
+// Troca de Aba (Simplificada - Sem Animação de Swipe)
 function openTab(e, nm) {
-    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    const currentIso = getVisibleDateIso();
+
+    document.querySelectorAll('.tab-content').forEach(c => {
+        c.classList.remove('active');
+        // c.style.transform = ''; // Não precisa mais limpar transform
+    });
+
     document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
-    document.getElementById(nm).classList.add('active');
-    e.currentTarget.classList.add('active');
+
+    const targetTab = document.getElementById(nm);
+    targetTab.classList.add('active');
+
+    if (e && e.currentTarget) {
+        e.currentTarget.classList.add('active');
+    } else {
+        const btn = document.querySelector(`button[onclick*="'${nm}'"]`);
+        if (btn) btn.classList.add('active');
+    }
+
+    updateTabSlider(); // Move a linha verde
+
     if (nm === 'comparar') renderTableCompare();
+
+    // Sincroniza o Scroll Instantaneamente
+    if (currentIso) {
+        const [y, m, d] = currentIso.split('-').map(Number);
+        const dateObj = new Date(y, m - 1, d);
+        scrollToDate(dateObj, false);
+    }
 }
 
 function switchView(viewName) {
     const home = document.getElementById('home-view');
     const settings = document.getElementById('settings-view');
     const navButtons = document.querySelectorAll('.nav-item');
+    const fabContainer = document.getElementById('fab-container');
 
     home.style.display = 'none';
     settings.style.display = 'none';
@@ -374,9 +427,11 @@ function switchView(viewName) {
     if (viewName === 'home') {
         home.style.display = 'block';
         navButtons[0].classList.add('active');
+        if (fabContainer) fabContainer.style.display = 'block';
     } else {
         settings.style.display = 'block';
         navButtons[1].classList.add('active');
+        if (fabContainer) fabContainer.style.display = 'none';
     }
 }
 
@@ -456,11 +511,17 @@ function init() {
 
     renderAll();
     updateSelectors();
+    // setupSwipeHandlers(); // REMOVIDO: Desativa gestos de toque
 
     const btnPuma = document.querySelector('button[onclick*="puma"]');
     if (btnPuma) btnPuma.click();
 
-    setTimeout(() => goToToday(), 500);
+    setTimeout(() => {
+        goToToday();
+        updateTabSlider();
+    }, 500);
+
+    window.addEventListener('resize', updateTabSlider);
 }
 
 window.onload = init;
