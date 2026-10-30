@@ -52,11 +52,11 @@
         </div>
 
         <div id="comparar" class="tab-content">
-            <h2 class="compare-header">Comparar Escalas</h2>
+            <h2 class="compare-header" id="compare-header-title">Comparar: PUMA A, PUMA A</h2>
             <div class="table-container">
                 <table>
                     <thead>
-                        <tr><th>Data</th><th>Dia</th><th>Fonte 1</th><th>Fonte 2</th></tr>
+                        <tr><th>Data</th><th>Dia</th><th id="compare-th-1">PUMA A</th><th id="compare-th-2">PUMA A</th></tr>
                     </thead>
                     <tbody id="compare-table-body"></tbody>
                 </table>
@@ -125,7 +125,7 @@
 
     <div id="fab-container">
         <button id="fab-compare" class="fab-mini" onclick="openCompareModal()" aria-label="Configurar Comparação" style="display: none;">
-            🎚️
+            ⚙
         </button>
 
         <button id="fab-today" class="fab-mini" onclick="goToToday()" aria-label="Ir para Hoje">

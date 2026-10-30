@@ -8,20 +8,20 @@ const TODAY = new Date(); TODAY.setHours(0, 0, 0, 0);
 let globalCurrentDate = new Date();
 let holidayCache = {};
 
-// Dados da Tabela PUMA
-const PUMA_ANCHOR_DATE = new Date(2025, 0, 1);
+// Dados da Tabela PUMA (Âncora: 20/11/2026 - Início da Letra C e demais letras em intervalos de 7 dias)
+const PUMA_ANCHOR_DATE = new Date(2026, 10, 20);
 const PUMA_CYCLES = {
-    A: ['F', '0', '0', '8', '8', '8', 'F', 'F', 'F', '16', '16', '16', 'F', '0', '0', '8', '8', 'F', 'F', 'F', 'F', '16', '16', 'F', '0', '0', '0', '8', '8', 'F', 'F', 'F', 'F', '16', '16'],
-    B: ['F', 'F', '16', '16', '16', 'F', '0', '0', '8', '8', 'F', 'F', 'F', 'F', '16', '16', 'F', '0', '0', '0', '8', '8', 'F', 'F', 'F', 'F', '16', '16', 'F', '0', '0', '8', '8', '8', 'F'],
-    C: ['16', '16', 'F', '0', '0', '0', '8', '8', 'F', 'F', 'F', 'F', '16', '16', 'F', '0', '0', '8', '8', '8', 'F', 'F', 'F', '16', '16', '16', 'F', '0', '0', '8', '8', 'F', 'F', 'F', 'F'],
-    D: ['8', 'F', 'F', 'F', 'F', '16', '16', 'F', '0', '0', '8', '8', '8', 'F', 'F', 'F', '16', '16', '16', 'F', '0', '0', '8', '8', 'F', 'F', 'F', 'F', '16', '16', 'F', '0', '0', '0', '8'],
-    E: ['0', '8', '8', 'F', 'F', 'F', 'F', '16', '16', 'F', '0', '0', '0', '8', '8', 'F', 'F', 'F', 'F', '16', '16', 'F', '0', '0', '8', '8', '8', 'F', 'F', 'F', '16', '16', '16', 'F', '0']
+    A: ['F', '0', '0', '0', '8', '8', 'F', 'F', 'F', 'F', '16', '16', 'F', '0', '0', '8', '8', '8', 'F', 'F', 'F', '16', '16', '16', 'F', '0', '0', '8', '8', 'F', 'F', 'F', 'F', '16', '16'],
+    B: ['F', 'F', 'F', '16', '16', 'F', '0', '0', '8', '8', '8', 'F', 'F', 'F', '16', '16', '16', 'F', '0', '0', '8', '8', 'F', 'F', 'F', 'F', '16', '16', 'F', '0', '0', '0', '8', '8', 'F'],
+    C: ['16', '16', '16', 'F', '0', '0', '8', '8', 'F', 'F', 'F', 'F', '16', '16', 'F', '0', '0', '0', '8', '8', 'F', 'F', 'F', 'F', '16', '16', 'F', '0', '0', '8', '8', '8', 'F', 'F', 'F'],
+    D: ['8', 'F', 'F', 'F', 'F', '16', '16', 'F', '0', '0', '0', '8', '8', 'F', 'F', 'F', 'F', '16', '16', 'F', '0', '0', '8', '8', '8', 'F', 'F', 'F', '16', '16', '16', 'F', '0', '0', '8'],
+    E: ['0', '8', '8', '8', 'F', 'F', 'F', '16', '16', '16', 'F', '0', '0', '8', '8', 'F', 'F', 'F', 'F', '16', '16', 'F', '0', '0', '0', '8', '8', 'F', 'F', 'F', 'F', '16', '16', 'F', '0']
 };
 
 // Dados da Tabela Monte Alegre
 const MA_ANCHOR_DATE = new Date(2025, 2, 15);
 const MA_SHIFT_CYCLE = ['F', 'F', 'F', 'F', '0', '0', '8', '8', '16', '16'];
-const MA_TEAM_OFFSETS = { A: 0, B: 4, C: 8, D: 6, E: 2 };
+const MA_TEAM_OFFSETS = { A: 0, B: 8, C: 2, D: 6, E: 4 };
 
 // ============================================================================
 // 2. UTILITÁRIOS E LÓGICA DE NEGÓCIO
@@ -34,13 +34,13 @@ function toISODate(date) {
     return `${year}-${month}-${day}`;
 }
 
-function diffDays(d1, d2) { return Math.floor((d2 - d1) / (1000 * 60 * 60 * 24)); }
+function diffDays(d1, d2) { return Math.round((d2 - d1) / (1000 * 60 * 60 * 24)); }
 
 function getEaster(y) {
     let f = Math.floor, c = f(y / 100), n = y - 19 * f(y / 19), k = f((c - 17) / 25), i = c - f(c / 4) - f((c - k) / 3) + 19 * n + 15;
     i = i - 30 * f(i / 30); i = i - f(i / 28) * (1 - f(i / 28) * f(29 / (i + 1)) * f((21 - n) / 11));
     let j = y + f(y / 4) + i + 2 - c + f(c / 4); j = j - 7 * f(j / 7);
-    let l = i - j, m = 3 + f((l + 40) / 44), d = l + 28 - 31 * f(m / 4); return new Date(y, m - 1, d);
+    let l = i - j, m = 3 + f((l + 40) / 44), d = 1 + l - 31 * f(m / 4); return new Date(y, m - 1, d);
 }
 
 function getHolidays(y) {
@@ -52,7 +52,7 @@ function getHolidays(y) {
 
     // --- 1. FERIADOS FIXOS ---
     add(new Date(y, 0, 1), "Confraternização Universal"); // 1 jan
-    add(new Date(y, 3, 21), "Tiradentes");                // 21 abr
+    add(new Date(y, 3, 21), "Tiradentes");               // 21 abr
     add(new Date(y, 4, 1), "Dia do Trabalho");            // 1 mai
     add(new Date(y, 8, 7), "Independência do Brasil");    // 7 set
     add(new Date(y, 9, 12), "Nossa Sra. Aparecida");      // 12 out
@@ -265,8 +265,33 @@ function loadYear(direction, container) {
     }, 100);
 }
 
+function formatCompareLabel(tabela, letra) {
+    const map = { 'puma': 'PUMA', 'ma': 'MA' };
+    const nomeTabela = map[tabela] || String(tabela).toUpperCase();
+    return `${nomeTabela} ${letra}`;
+}
+
+function updateCompareHeaders() {
+    const t1El = document.getElementById('compareTabela1');
+    const l1El = document.getElementById('compareLetra1');
+    const t2El = document.getElementById('compareTabela2');
+    const l2El = document.getElementById('compareLetra2');
+    if (!t1El || !l1El || !t2El || !l2El) return;
+
+    const label1 = formatCompareLabel(t1El.value, l1El.value);
+    const label2 = formatCompareLabel(t2El.value, l2El.value);
+
+    const th1 = document.getElementById('compare-th-1');
+    const th2 = document.getElementById('compare-th-2');
+    const headerTitle = document.getElementById('compare-header-title');
+
+    if (th1) th1.innerText = label1;
+    if (th2) th2.innerText = label2;
+    if (headerTitle) headerTitle.innerText = `${label1}, ${label2}`;
+}
 
 function renderTableCompare() {
+    updateCompareHeaders();
     // --- LÓGICA DO MODAL ---
     // Pega os valores dos selects dentro do modal
     const t1 = document.getElementById('compareTabela1').value;
@@ -278,7 +303,10 @@ function renderTableCompare() {
         { tabela: t1, letra: l1 },
         { tabela: t2, letra: l2 }
     ];
+    const container = document.querySelector('#comparar .table-container');
+    const savedScroll = container ? container.scrollTop : 0;
     renderTable(document.getElementById('compare-table-body'), null, comparisonSources, 'compare');
+    if (container && savedScroll > 0) container.scrollTop = savedScroll;
 }
 
 function renderAll() {
@@ -454,7 +482,7 @@ function getVisibleDateIso() {
     if (!activeContainer) return null;
 
     const targetY = activeContainer.scrollTop + (activeContainer.clientHeight / 2);
-    const rows = activeContainer.querySelectorAll('tr[id*="date-"]');
+    const rows = activeContainer.querySelectorAll('tr[id*="-date-"]');
 
     let bestRow = null;
     let minDiff = Infinity;
@@ -471,6 +499,7 @@ function getVisibleDateIso() {
         const match = bestRow.id.match(/date-(\d{4}-\d{2}-\d{2})/);
         return match ? match[1] : null;
     }
+
     return null;
 }
 
@@ -595,6 +624,7 @@ function openTab(e, nm) {
     // Lógica do botão flutuante e Renderização Inicial da Comparação
     const fabCompare = document.getElementById('fab-compare');
     if (nm === 'comparar') {
+        updateCompareHeaders();
         // SÓ renderiza o padrão se NÃO tivermos uma data salva para sincronizar.
         // Se tiver savedIso, deixamos a lógica de sincronização (passo 3) cuidar disso para não piscar a tela.
         if (!savedIso) {
@@ -770,15 +800,16 @@ function init() {
 
     updateCompareLetras();
     loadSavedSettings();
+    updateCompareHeaders();
     setupAutoSave();
 
     renderAll();
     updateSelectors();
     setupInfiniteScroll();
 
-    // ============================================================
+    // ===================================================
     // CORREÇÃO AQUI: Adicionando os cliques via JS e Iniciando
-    // ============================================================
+    // ===================================================
 
     // Pegamos os botões pelos IDs novos que você colocou no HTML
     const btnPuma = document.getElementById('btn-puma');
@@ -803,7 +834,5 @@ function init() {
 
     window.addEventListener('resize', updateTabSlider);
 }
-
-
 
 window.onload = init;
