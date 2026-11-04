@@ -3,9 +3,14 @@
 // ============================================================================
 const MONTH_NAMES = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
 const DAY_NAMES = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
+const TEAMS = ['A', 'B', 'C', 'D', 'E'];
 const TODAY = new Date(); TODAY.setHours(0, 0, 0, 0);
 
-let globalCurrentDate = new Date();
+const MAX_COMPARE = 5;          // Máximo de turmas na comparação
+const NEXT_FOLGAS_LIMIT = 8;    // Quantas "próximas folgas juntas" mostrar
+const NEXT_FOLGAS_DAYS = 365;   // Até quantos dias à frente procurar
+
+let globalCurrentDate = new Date(TODAY);
 let holidayCache = {};
 
 // Dados da Tabela PUMA (Âncora: 20/11/2026 - Início da Letra C e demais letras em intervalos de 7 dias)
@@ -23,9 +28,29 @@ const MA_ANCHOR_DATE = new Date(2025, 2, 15);
 const MA_SHIFT_CYCLE = ['F', 'F', 'F', 'F', '0', '0', '8', '8', '16', '16'];
 const MA_TEAM_OFFSETS = { A: 0, B: 8, C: 2, D: 6, E: 4 };
 
+const TABLE_LABELS = { puma: 'PUMA', ma: 'MA' };
+const TABLE_NAMES = { puma: 'PUMA', ma: 'Monte Alegre' };
+
+// Mapeia o id da aba para o prefixo usado nos ids das linhas (e vice-versa)
+const TAB_PREFIX = { 'puma': 'puma', 'monte-alegre': 'ma', 'comparar': 'compare' };
+const TAB_BUTTON = { 'puma': 'btn-puma', 'monte-alegre': 'btn-ma', 'comparar': 'btn-comparar' };
+
 // ============================================================================
 // 2. UTILITÁRIOS E LÓGICA DE NEGÓCIO
 // ============================================================================
+
+const byId = (id) => document.getElementById(id);
+
+// localStorage pode falhar (aba anônima, armazenamento bloqueado): o app funciona mesmo assim
+function loadSetting(key, fallback) {
+    try {
+        const v = localStorage.getItem(key);
+        return v === null ? fallback : v;
+    } catch (e) { return fallback; }
+}
+function saveSetting(key, value) {
+    try { localStorage.setItem(key, value); } catch (e) { /* ignora */ }
+}
 
 function toISODate(date) {
     const year = date.getFullYear();
@@ -34,7 +59,14 @@ function toISODate(date) {
     return `${year}-${month}-${day}`;
 }
 
+function isoToDate(iso) {
+    const [y, m, d] = iso.split('-').map(Number);
+    return new Date(y, m - 1, d);
+}
+
 function diffDays(d1, d2) { return Math.round((d2 - d1) / (1000 * 60 * 60 * 24)); }
+
+function isWeekend(d) { const w = d.getDay(); return w === 0 || w === 6; }
 
 function getEaster(y) {
     let f = Math.floor, c = f(y / 100), n = y - 19 * f(y / 19), k = f((c - 17) / 25), i = c - f(c / 4) - f((c - k) / 3) + 19 * n + 15;
@@ -46,8 +78,6 @@ function getEaster(y) {
 function getHolidays(y) {
     if (holidayCache[y]) return holidayCache[y];
     const h = {};
-
-    // Função auxiliar para formatar e adicionar na lista
     const add = (dt, nm) => h[toISODate(dt)] = nm;
 
     // --- 1. FERIADOS FIXOS ---
@@ -58,25 +88,15 @@ function getHolidays(y) {
     add(new Date(y, 9, 12), "Nossa Sra. Aparecida");      // 12 out
     add(new Date(y, 10, 2), "Finados");                   // 2 nov
     add(new Date(y, 10, 15), "Proclamação da República"); // 15 nov
+    if (y >= 2024) add(new Date(y, 10, 20), "Consciência Negra"); // 20 nov (Lei 14.759/2023)
     add(new Date(y, 11, 25), "Natal");                    // 25 dez
 
     // --- 2. FERIADOS MÓVEIS (Baseados na Páscoa) ---
     const pascoa = getEaster(y);
-
-    // Carnaval (Terça-feira): 47 dias antes da Páscoa
-    const carnaval = new Date(pascoa);
-    carnaval.setDate(pascoa.getDate() - 47);
-    add(carnaval, "Carnaval");
-
-    // Sexta-feira Santa: 2 dias antes da Páscoa
-    const sextaSanta = new Date(pascoa);
-    sextaSanta.setDate(pascoa.getDate() - 2);
-    add(sextaSanta, "Sexta-feira Santa");
-
-    // Corpus Christi: 60 dias após a Páscoa
-    const corpus = new Date(pascoa);
-    corpus.setDate(pascoa.getDate() + 60);
-    add(corpus, "Corpus Christi");
+    const offset = (days) => new Date(pascoa.getFullYear(), pascoa.getMonth(), pascoa.getDate() + days);
+    add(offset(-47), "Carnaval");          // Terça de Carnaval
+    add(offset(-2), "Sexta-feira Santa");
+    add(offset(60), "Corpus Christi");
 
     holidayCache[y] = h;
     return h;
@@ -85,44 +105,87 @@ function getHolidays(y) {
 function isHoliday(d) { return getHolidays(d.getFullYear())[toISODate(d)] || null; }
 
 function getPumaShift(d, t) {
-    const dDiff = diffDays(PUMA_ANCHOR_DATE, d);
-    const idx = ((dDiff % 35) + 35) % 35;
+    const idx = ((diffDays(PUMA_ANCHOR_DATE, d) % 35) + 35) % 35;
     return PUMA_CYCLES[t][idx];
 }
 
 function getMaShift(d, t) {
-    const dDiff = diffDays(MA_ANCHOR_DATE, d);
-    const idx = ((dDiff + MA_TEAM_OFFSETS[t]) % 10 + 10) % 10;
+    const idx = ((diffDays(MA_ANCHOR_DATE, d) + MA_TEAM_OFFSETS[t]) % 10 + 10) % 10;
     return MA_SHIFT_CYCLE[idx];
 }
 
 const SHIFT_FUNCTIONS = { 'puma': getPumaShift, 'ma': getMaShift };
 
-// ============================================================================
-// 3. RENDERIZAÇÃO DAS TABELAS
-// ============================================================================
-
-let lastRenderedYear = new Date().getFullYear();
-let firstRenderedYear = new Date().getFullYear();
-let isLoadingMore = false;
-
-// Função Principal de Renderização (Limpa e inicia)
-function renderTable(body, fn, teams, prefix) {
-    if (!body) return;
-    body.innerHTML = '';
-
-    // Reseta os limites
-    lastRenderedYear = globalCurrentDate.getFullYear();
-    firstRenderedYear = lastRenderedYear;
-
-    // Renderiza o ano inicial
-    const frag = createYearFragment(lastRenderedYear, fn, teams, prefix);
-    body.appendChild(frag);
+// Uma "turma" é sempre { tabela: 'puma' | 'ma', letra: 'A'..'E' }
+function getShift(team, date) { return SHIFT_FUNCTIONS[team.tabela](date, team.letra); }
+function teamKey(team) { return `${team.tabela}:${team.letra}`; }
+function formatTeamLabel(team) { return `${TABLE_LABELS[team.tabela]} ${team.letra}`; }
+function parseTeam(str) {
+    const [tabela, letra] = String(str || '').split(':');
+    return (SHIFT_FUNCTIONS[tabela] && TEAMS.includes(letra)) ? { tabela, letra } : null;
 }
 
-function createYearFragment(year, fn, teams, prefix) {
+// ============================================================================
+// 3. ESTADO (Minha turma e Comparação)
+// ============================================================================
+
+let myTeam = null;          // Turma do usuário (ou null)
+let compareSources = [];    // Turmas sendo comparadas (2 a 5)
+
+function loadCompareSources() {
+    try {
+        const saved = JSON.parse(localStorage.getItem('compareSources'));
+        if (Array.isArray(saved)) {
+            const valid = saved.map(o => o && parseTeam(`${o.tabela}:${o.letra}`)).filter(Boolean);
+            if (valid.length >= 2) return valid.slice(0, MAX_COMPARE);
+        }
+    } catch (e) { /* ignora e usa o padrão */ }
+
+    // Migra o formato antigo (compareTabela1/compareLetra1/compareTabela2/compareLetra2)
+    const old = [1, 2].map(i => parseTeam(`${loadSetting('compareTabela' + i, '')}:${loadSetting('compareLetra' + i, '')}`));
+    if (old[0] && old[1]) return old;
+
+    // Padrão: minha turma (se houver) contra a turma A da outra fábrica
+    const first = myTeam || { tabela: 'puma', letra: 'A' };
+    const second = { tabela: first.tabela === 'puma' ? 'ma' : 'puma', letra: 'A' };
+    return [first, second];
+}
+
+function saveCompareSources() {
+    saveSetting('compareSources', JSON.stringify(compareSources));
+}
+
+// ============================================================================
+// 4. RENDERIZAÇÃO DAS TABELAS
+// ============================================================================
+
+// Intervalo de anos renderizado em CADA tabela ({ first, last } ou null)
+const renderedYears = { puma: null, ma: null, compare: null };
+let isLoadingMore = false;
+
+// Configuração de cada tabela, em um só lugar
+function getTableConfig(prefix) {
+    if (prefix === 'compare') return { body: byId('compare-table-body'), sources: compareSources };
+    if (prefix === 'puma' || prefix === 'ma') {
+        return { body: byId(`${prefix}-table-body`), sources: TEAMS.map(letra => ({ tabela: prefix, letra })) };
+    }
+    return null;
+}
+
+function getActivePrefix() {
+    const activeTab = document.querySelector('.tab-content.active');
+    return activeTab ? TAB_PREFIX[activeTab.id] : null;
+}
+
+function getActiveContainer() {
+    return document.querySelector('.tab-content.active .table-container');
+}
+
+function createYearFragment(year, sources, prefix) {
     const fragment = document.createDocumentFragment();
-    const colSpan = teams.length + 2;
+    const colSpan = sources.length + 2;
+    const isCompare = prefix === 'compare';
+    const myKey = myTeam ? teamKey(myTeam) : null;
 
     for (let m = 0; m < 12; m++) {
         const trMonth = document.createElement('tr');
@@ -133,88 +196,107 @@ function createYearFragment(year, fn, teams, prefix) {
         const lastDay = new Date(year, m + 1, 0).getDate();
         for (let i = 1; i <= lastDay; i++) {
             const d = new Date(year, m, i);
-            const iso = toISODate(d);
             const w = d.getDay();
             const hol = isHoliday(d);
+            const weekend = isWeekend(d);
 
             const tr = document.createElement('tr');
-            tr.id = `${prefix}-date-${iso}`;
+            tr.id = `${prefix}-date-${toISODate(d)}`;
 
-            // --- LÓGICA DE CORES SEPARADA ---
+            // Coluna DATA: só feriado fica vermelho. Coluna DIA: feriado ou fim de semana.
+            let html = `<td class="${hol ? 'dia-feriado' : ''}"${hol ? ` title="${hol}"` : ''}>${d.toLocaleDateString('pt-BR')}</td>`;
+            html += `<td class="${(hol || weekend) ? 'dia-feriado' : ''}">${DAY_NAMES[w]}</td>`;
 
-            // Regra 1: Coluna DATA (Só feriado fica vermelho)
-            const classData = hol ? 'dia-feriado' : '';
-
-            // Regra 2: Coluna DIA (Feriado OU Fim de semana fica vermelho)
-            const isWeekend = (w === 0 || w === 6);
-            const classDia = (hol || isWeekend) ? 'dia-feriado' : '';
-
-            // Monta o HTML
-            let html = `<td class="${classData}">${d.toLocaleDateString('pt-BR')}</td>`;
-            html += `<td class="${classDia}">${DAY_NAMES[w]}</td>`;
-
-            teams.forEach(t => {
-                let s;
-                if (typeof t === 'object') {
-                    const shiftFn = SHIFT_FUNCTIONS[t.tabela];
-                    s = shiftFn(d, t.letra);
-                } else {
-                    s = fn(d, t);
-                }
-                html += `<td class="shift-${s.toLowerCase()}">${s}</td>`;
+            const shifts = sources.map(s => getShift(s, d));
+            shifts.forEach((s, idx) => {
+                const mine = myKey && teamKey(sources[idx]) === myKey ? ' my-team-col' : '';
+                html += `<td class="shift-${s.toLowerCase()}${mine}">${s}</td>`;
             });
-
             tr.innerHTML = html;
 
-            if (d.getTime() === TODAY.getTime()) {
-                // Removemos o style.border antigo e adicionamos a classe CSS
-                tr.classList.add('row-today');
+            // Comparação: destaca os dias em que TODAS as turmas estão de folga
+            if (isCompare && shifts.every(s => s === 'F')) {
+                tr.classList.add('folga-comum');
+                if (hol || weekend) tr.classList.add('folga-fds');
             }
+
+            if (d.getTime() === TODAY.getTime()) tr.classList.add('row-today');
             fragment.appendChild(tr);
         }
     }
     return fragment;
 }
 
-// Nova Função: Apenas cria as linhas de um ano e adiciona ao final
-function appendYearToTable(year, body, fn, teams, prefix) {
-    const frag = createYearFragment(year, fn, teams, prefix);
-    body.appendChild(frag);
+// Limpa a tabela e renderiza os anos de "first" até "last"
+function renderYearRange(prefix, first, last) {
+    const config = getTableConfig(prefix);
+    if (!config || !config.body) return;
+    config.body.innerHTML = '';
+    for (let y = first; y <= last; y++) {
+        config.body.appendChild(createYearFragment(y, config.sources, prefix));
+    }
+    renderedYears[prefix] = { first, last };
 }
 
-// Anexa ano passado (Início da tabela)
-function prependYearToTable(year, body, fn, teams, prefix, container) {
-    // 1. Salva a altura e a posição atual exata
+// Re-renderiza mantendo os anos já carregados (usado ao mudar "minha turma")
+function rerenderKeepingRange(prefix) {
+    const range = renderedYears[prefix];
+    if (range) renderYearRange(prefix, range.first, range.last);
+}
+
+// Garante que a linha da data exista na tabela; se não existir, renderiza o ano dela
+function ensureDateRendered(prefix, date) {
+    const id = `${prefix}-date-${toISODate(date)}`;
+    let row = byId(id);
+    if (!row) {
+        renderYearRange(prefix, date.getFullYear(), date.getFullYear());
+        row = byId(id);
+    }
+    return row;
+}
+
+// Guarda qual data está no topo da tela e a distância dela até o topo
+function getScrollAnchor(container) {
+    if (!container) return null;
+    const rows = container.querySelectorAll('tr[id*="-date-"]');
+    for (const row of rows) {
+        const relativeTop = row.offsetTop - container.scrollTop;
+        if (relativeTop >= 0 && relativeTop < container.clientHeight) {
+            const match = row.id.match(/date-(\d{4}-\d{2}-\d{2})/);
+            if (match) return { iso: match[1], offset: relativeTop };
+        }
+    }
+    return null;
+}
+
+function restoreScrollAnchor(container, prefix, anchor) {
+    if (!container || !anchor) return;
+    const row = byId(`${prefix}-date-${anchor.iso}`);
+    if (row) container.scrollTop = row.offsetTop - anchor.offset;
+}
+
+// Anexa ano passado (início da tabela) sem a tela "pular"
+function prependYearToTable(year, body, sources, prefix, container) {
     const oldHeight = container.scrollHeight;
     const oldScrollTop = container.scrollTop;
 
-    // 2. Cria e insere o novo ano no topo
-    const frag = createYearFragment(year, fn, teams, prefix);
-    body.insertBefore(frag, body.firstChild);
+    body.insertBefore(createYearFragment(year, sources, prefix), body.firstChild);
 
-    // 3. Calcula a diferença de altura criada pelo novo conteúdo
-    const newHeight = container.scrollHeight;
-    const heightDifference = newHeight - oldHeight;
-
-    // 4. Ajusta a rolagem: Posição Antiga + Altura do Novo Conteúdo
-    container.scrollTop = oldScrollTop + heightDifference;
+    // Compensa a altura do conteúdo novo para manter a mesma data na tela
+    container.scrollTop = oldScrollTop + (container.scrollHeight - oldHeight);
 }
 
 function setupInfiniteScroll() {
-    const containers = document.querySelectorAll('.table-container');
-
-    containers.forEach(container => {
+    document.querySelectorAll('.table-container').forEach(container => {
         container.addEventListener('scroll', () => {
             if (isLoadingMore) return;
 
-            // Detecta fim da página (Futuro)
-            const scrollBottom = container.scrollHeight - container.scrollTop - container.clientHeight;
-            if (scrollBottom < 600) { // Aumentei um pouco a margem
+            // Perto do fim: carrega o próximo ano
+            if (container.scrollHeight - container.scrollTop - container.clientHeight < 600) {
                 loadYear('next', container);
             }
-
-            // Detecta topo da página (Passado)
-            if (container.scrollTop < 600) {
+            // Perto do topo: carrega o ano anterior
+            else if (container.scrollTop < 600) {
                 loadYear('prev', container);
             }
         });
@@ -222,161 +304,215 @@ function setupInfiniteScroll() {
 }
 
 function loadYear(direction, container) {
+    // A tabela é identificada pelo container que rolou
+    const tab = container.closest('.tab-content');
+    const prefix = tab ? TAB_PREFIX[tab.id] : null;
+    const range = prefix ? renderedYears[prefix] : null;
+    const config = prefix ? getTableConfig(prefix) : null;
+    if (!range || !config || !config.body) return;
+
     isLoadingMore = true;
 
-    // Identifica parâmetros baseados na aba ativa
-    const activeTab = document.querySelector('.tab-content.active');
-    let targetBody, fn, teams, prefix;
-
-    if (activeTab.id === 'puma') {
-        targetBody = document.getElementById('puma-table-body');
-        fn = getPumaShift;
-        teams = ['A', 'B', 'C', 'D', 'E'];
-        prefix = 'puma';
-    } else if (activeTab.id === 'monte-alegre') {
-        targetBody = document.getElementById('ma-table-body');
-        fn = getMaShift;
-        teams = ['A', 'B', 'C', 'D', 'E'];
-        prefix = 'ma';
-    } else if (activeTab.id === 'comparar') {
-        targetBody = document.getElementById('compare-table-body');
-        const t1 = document.getElementById('compareTabela1').value;
-        const l1 = document.getElementById('compareLetra1').value;
-        const t2 = document.getElementById('compareTabela2').value;
-        const l2 = document.getElementById('compareLetra2').value;
-
-        fn = null; // Comparação usa lógica interna
-        teams = [{ tabela: t1, letra: l1 }, { tabela: t2, letra: l2 }];
-        prefix = 'compare';
-    }
-
     if (direction === 'next') {
-        lastRenderedYear++;
-        appendYearToTable(lastRenderedYear, targetBody, fn, teams, prefix);
+        range.last++;
+        config.body.appendChild(createYearFragment(range.last, config.sources, prefix));
     } else {
-        firstRenderedYear--;
-        // Passamos o container também para fazer o cálculo de scroll
-        prependYearToTable(firstRenderedYear, targetBody, fn, teams, prefix, container);
+        range.first--;
+        prependYearToTable(range.first, config.body, config.sources, prefix, container);
     }
 
-    // Delay para evitar disparos múltiplos
-    setTimeout(() => {
-        isLoadingMore = false;
-    }, 100);
+    // Libera no próximo quadro, depois que o navegador aplicou a nova rolagem
+    requestAnimationFrame(() => { isLoadingMore = false; });
 }
 
-function formatCompareLabel(tabela, letra) {
-    const map = { 'puma': 'PUMA', 'ma': 'MA' };
-    const nomeTabela = map[tabela] || String(tabela).toUpperCase();
-    return `${nomeTabela} ${letra}`;
+// Cabeçalhos das 3 tabelas (marca "minha turma" com ★)
+function renderHeaders() {
+    const myKey = myTeam ? teamKey(myTeam) : null;
+    ['puma', 'ma', 'compare'].forEach(prefix => {
+        const row = byId(`${prefix}-head`);
+        const config = getTableConfig(prefix);
+        if (!row || !config) return;
+        row.innerHTML = '<th>Data</th><th>Dia</th>' + config.sources.map(s => {
+            const label = prefix === 'compare' ? formatTeamLabel(s) : s.letra;
+            const mine = myKey && teamKey(s) === myKey;
+            return `<th class="${mine ? 'my-team-col' : ''}">${mine ? '★ ' : ''}${label}</th>`;
+        }).join('');
+    });
+
+    const title = byId('compare-header-title');
+    if (title) title.textContent = 'Comparar: ' + compareSources.map(formatTeamLabel).join(', ');
 }
 
-function updateCompareHeaders() {
-    const t1El = document.getElementById('compareTabela1');
-    const l1El = document.getElementById('compareLetra1');
-    const t2El = document.getElementById('compareTabela2');
-    const l2El = document.getElementById('compareLetra2');
-    if (!t1El || !l1El || !t2El || !l2El) return;
+// ============================================================================
+// 5. COMPARAÇÃO
+// ============================================================================
 
-    const label1 = formatCompareLabel(t1El.value, l1El.value);
-    const label2 = formatCompareLabel(t2El.value, l2El.value);
-
-    const th1 = document.getElementById('compare-th-1');
-    const th2 = document.getElementById('compare-th-2');
-    const headerTitle = document.getElementById('compare-header-title');
-
-    if (th1) th1.innerText = label1;
-    if (th2) th2.innerText = label2;
-    if (headerTitle) headerTitle.innerText = `${label1}, ${label2}`;
+function findNextCommonDaysOff(sources, from, limit, maxDays) {
+    const result = [];
+    for (let i = 0; i < maxDays && result.length < limit; i++) {
+        const d = new Date(from.getFullYear(), from.getMonth(), from.getDate() + i);
+        if (sources.every(s => getShift(s, d) === 'F')) result.push(d);
+    }
+    return result;
 }
 
-function renderTableCompare() {
-    updateCompareHeaders();
-    // --- LÓGICA DO MODAL ---
-    // Pega os valores dos selects dentro do modal
-    const t1 = document.getElementById('compareTabela1').value;
-    const l1 = document.getElementById('compareLetra1').value;
-    const t2 = document.getElementById('compareTabela2').value;
-    const l2 = document.getElementById('compareLetra2').value;
+function renderNextDaysOff() {
+    const el = byId('compare-next');
+    if (!el) return;
+    el.innerHTML = '';
 
-    const comparisonSources = [
-        { tabela: t1, letra: l1 },
-        { tabela: t2, letra: l2 }
-    ];
+    const days = findNextCommonDaysOff(compareSources, TODAY, NEXT_FOLGAS_LIMIT, NEXT_FOLGAS_DAYS);
+    const label = document.createElement('span');
+    label.className = 'next-label';
+    label.textContent = days.length ? 'Próximas folgas juntas:' : 'Nenhuma folga em comum nos próximos 12 meses';
+    el.appendChild(label);
+
+    days.forEach(d => {
+        const special = isWeekend(d) || isHoliday(d);
+        const chip = document.createElement('button');
+        chip.className = 'next-chip' + (special ? ' fds' : '');
+        chip.textContent = `${DAY_NAMES[d.getDay()]} ${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}`;
+        chip.title = d.toLocaleDateString('pt-BR') + (isHoliday(d) ? ` (${isHoliday(d)})` : '');
+        chip.onclick = () => scrollToDate(d);
+        el.appendChild(chip);
+    });
+}
+
+// preservePosition = true: ao trocar as turmas, mantém os mesmos anos e a mesma data na tela
+function renderTableCompare(preservePosition = true) {
+    renderHeaders();
+    renderNextDaysOff();
+
     const container = document.querySelector('#comparar .table-container');
-    const savedScroll = container ? container.scrollTop : 0;
-    renderTable(document.getElementById('compare-table-body'), null, comparisonSources, 'compare');
-    if (container && savedScroll > 0) container.scrollTop = savedScroll;
+    const range = renderedYears.compare;
+    const anchor = (preservePosition && range) ? getScrollAnchor(container) : null;
+
+    if (anchor) {
+        renderYearRange('compare', range.first, range.last);
+        restoreScrollAnchor(container, 'compare', anchor);
+    } else {
+        const y = globalCurrentDate.getFullYear();
+        renderYearRange('compare', y, y);
+    }
+}
+
+function onCompareChanged() {
+    saveCompareSources();
+    renderTableCompare(true);
+}
+
+// Monta a lista de turmas dentro do modal de comparação
+function renderCompareEditor() {
+    const list = byId('compare-sources');
+    list.innerHTML = '';
+
+    compareSources.forEach((src, i) => {
+        const row = document.createElement('div');
+        row.className = 'source-row';
+
+        const num = document.createElement('span');
+        num.className = 'source-num';
+        num.textContent = i + 1;
+
+        const tabSel = document.createElement('select');
+        tabSel.className = 'modal-select';
+        tabSel.setAttribute('aria-label', `Tabela da turma ${i + 1}`);
+        Object.entries(TABLE_NAMES).forEach(([value, name]) => tabSel.add(new Option(name, value)));
+        tabSel.value = src.tabela;
+        tabSel.onchange = () => { src.tabela = tabSel.value; onCompareChanged(); };
+
+        const letraSel = document.createElement('select');
+        letraSel.className = 'modal-select select-letra';
+        letraSel.setAttribute('aria-label', `Letra da turma ${i + 1}`);
+        TEAMS.forEach(l => letraSel.add(new Option(l, l)));
+        letraSel.value = src.letra;
+        letraSel.onchange = () => { src.letra = letraSel.value; onCompareChanged(); };
+
+        const rm = document.createElement('button');
+        rm.className = 'btn-remove';
+        rm.textContent = '✕';
+        rm.setAttribute('aria-label', `Remover turma ${i + 1}`);
+        rm.disabled = compareSources.length <= 2;
+        rm.onclick = () => {
+            compareSources.splice(i, 1);
+            renderCompareEditor();
+            onCompareChanged();
+        };
+
+        row.append(num, tabSel, letraSel, rm);
+        list.appendChild(row);
+    });
+
+    byId('btn-add-source').disabled = compareSources.length >= MAX_COMPARE;
+}
+
+function addCompareSource() {
+    if (compareSources.length >= MAX_COMPARE) return;
+    // Sugere a primeira turma que ainda não está na lista
+    const used = new Set(compareSources.map(teamKey));
+    let next = { tabela: 'puma', letra: 'A' };
+    outer: for (const tabela of Object.keys(TABLE_LABELS)) {
+        for (const letra of TEAMS) {
+            if (!used.has(`${tabela}:${letra}`)) { next = { tabela, letra }; break outer; }
+        }
+    }
+    compareSources.push(next);
+    renderCompareEditor();
+    onCompareChanged();
+}
+
+function openCompareModal() {
+    renderCompareEditor();
+    byId('compare-modal').style.display = 'flex';
+}
+
+function closeCompareModal() {
+    byId('compare-modal').style.display = 'none';
 }
 
 function renderAll() {
-    renderTable(document.getElementById('puma-table-body'), getPumaShift, ['A', 'B', 'C', 'D', 'E'], 'puma');
-    renderTable(document.getElementById('ma-table-body'), getMaShift, ['A', 'B', 'C', 'D', 'E'], 'ma');
-
-    // Se a aba comparar estiver ativa, renderiza ela também
-    if (document.getElementById('comparar').classList.contains('active')) {
-        renderTableCompare();
-    }
-    updateSelectors();
+    const y = globalCurrentDate.getFullYear();
+    renderYearRange('puma', y, y);
+    renderYearRange('ma', y, y);
+    renderTableCompare(false);
 }
 
 // ============================================================================
-// 4. MODAIS (DATA E CONFIGURAÇÃO)
+// 6. MODAL DE DATA (CALENDÁRIO)
 // ============================================================================
 
-// --- Modal de Data ---
 let calViewDate = new Date();
 let calSelectedDate = new Date();
 let calMode = 'days';
 
 function openDateModal() {
-    const modal = document.getElementById('date-modal');
     calSelectedDate = new Date(globalCurrentDate);
     calViewDate = new Date(globalCurrentDate);
     calMode = 'days';
     renderCalendar();
-    modal.style.display = 'flex';
+    byId('date-modal').style.display = 'flex';
 }
 
 function closeDateModal() {
-    document.getElementById('date-modal').style.display = 'none';
+    byId('date-modal').style.display = 'none';
 }
 
-// --- NOVO: Modal de Comparação (AQUI ESTAVA FALTANDO) ---
-function openCompareModal() {
-    document.getElementById('compare-modal').style.display = 'flex';
-}
-
-function closeCompareModal() {
-    document.getElementById('compare-modal').style.display = 'none';
-    renderTableCompare(); // Atualiza a tabela ao fechar o modal
-}
-
-// --- Lógica do Calendário ---
 function renderCalendar() {
-    const titleMonth = document.getElementById('calTitleMonth');
-    const titleYear = document.getElementById('calTitleYear');
-    const weekdays = document.getElementById('calendarWeekdays');
-    const content = document.getElementById('calendarGrid');
+    const weekdays = byId('calendarWeekdays');
+    const content = byId('calendarGrid');
 
-    titleMonth.innerText = MONTH_NAMES[calViewDate.getMonth()];
-    titleYear.innerText = calViewDate.getFullYear();
+    byId('calTitleMonth').innerText = MONTH_NAMES[calViewDate.getMonth()];
+    byId('calTitleYear').innerText = calViewDate.getFullYear();
     content.innerHTML = '';
 
-    if (calMode === 'days') {
-        weekdays.style.display = 'grid';
-        renderDaysGrid(content);
-    } else if (calMode === 'months') {
-        weekdays.style.display = 'none';
-        renderMonthsGrid(content);
-    } else if (calMode === 'years') {
-        weekdays.style.display = 'none';
-        renderYearsGrid(content);
-    }
+    weekdays.style.display = calMode === 'days' ? 'grid' : 'none';
+    if (calMode === 'days') renderDaysGrid(content);
+    else if (calMode === 'months') renderMonthsGrid(content);
+    else renderYearsGrid(content);
 }
 
 function renderDaysGrid(container) {
-    container.className = 'days-grid';
+    container.className = 'calendar-content days-grid';
     const y = calViewDate.getFullYear();
     const m = calViewDate.getMonth();
     const firstDay = new Date(y, m, 1).getDay();
@@ -396,9 +532,7 @@ function renderDaysGrid(container) {
         if (d === calSelectedDate.getDate() && m === calSelectedDate.getMonth() && y === calSelectedDate.getFullYear()) {
             div.classList.add('selected');
         }
-
-        const today = new Date();
-        if (d === today.getDate() && m === today.getMonth() && y === today.getFullYear()) {
+        if (d === TODAY.getDate() && m === TODAY.getMonth() && y === TODAY.getFullYear()) {
             div.classList.add('today');
         }
 
@@ -411,13 +545,14 @@ function renderDaysGrid(container) {
 }
 
 function renderMonthsGrid(container) {
-    container.className = 'month-picker-grid';
+    container.className = 'calendar-content month-picker-grid';
     MONTH_NAMES.forEach((name, idx) => {
         const div = document.createElement('div');
         div.className = 'month-picker-item';
         div.innerText = name.substring(0, 3);
         if (idx === calViewDate.getMonth()) div.classList.add('selected');
         div.onclick = () => {
+            calViewDate.setDate(1); // evita pular mês (ex.: 31/01 -> fevereiro)
             calViewDate.setMonth(idx);
             calMode = 'days';
             renderCalendar();
@@ -427,16 +562,14 @@ function renderMonthsGrid(container) {
 }
 
 function renderYearsGrid(container) {
-    container.className = 'year-picker-grid';
+    container.className = 'calendar-content year-picker-grid';
     const currentYear = calViewDate.getFullYear();
-    const startYear = currentYear - 5;
-    const endYear = currentYear + 6;
 
-    for (let y = startYear; y <= endYear; y++) {
+    for (let y = currentYear - 5; y <= currentYear + 6; y++) {
         const div = document.createElement('div');
         div.className = 'year-picker-item';
         div.innerText = y;
-        if (y === calViewDate.getFullYear()) div.classList.add('selected');
+        if (y === currentYear) div.classList.add('selected');
         div.onclick = () => {
             calViewDate.setFullYear(y);
             calMode = 'months';
@@ -450,313 +583,142 @@ function openMonthPicker() { calMode = (calMode === 'months') ? 'days' : 'months
 function openYearPicker() { calMode = (calMode === 'years') ? 'days' : 'years'; renderCalendar(); }
 
 function changeCalendarPage(delta) {
-    if (calMode === 'days') calViewDate.setMonth(calViewDate.getMonth() + delta);
+    if (calMode === 'days') { calViewDate.setDate(1); calViewDate.setMonth(calViewDate.getMonth() + delta); }
     else if (calMode === 'months') calViewDate.setFullYear(calViewDate.getFullYear() + delta);
-    else if (calMode === 'years') calViewDate.setFullYear(calViewDate.getFullYear() + (delta * 12));
+    else calViewDate.setFullYear(calViewDate.getFullYear() + (delta * 12));
     renderCalendar();
 }
 
 function confirmDate() {
-    const y = calSelectedDate.getFullYear();
-    const m = calSelectedDate.getMonth();
-    const d = calSelectedDate.getDate();
-
-    if (y !== globalCurrentDate.getFullYear()) {
-        globalCurrentDate.setFullYear(y);
-        renderAll();
-    }
-
     globalCurrentDate = new Date(calSelectedDate);
     closeDateModal();
-
-    setTimeout(() => { scrollToDate(globalCurrentDate); }, 100);
-    updateSelectors();
+    scrollToDate(globalCurrentDate);
 }
 
 // ============================================================================
-// 5. NAVEGAÇÃO E INTERFACE
+// 7. NAVEGAÇÃO E INTERFACE
 // ============================================================================
-
-function getVisibleDateIso() {
-    const activeContainer = document.querySelector('.tab-content.active .table-container');
-    if (!activeContainer) return null;
-
-    const targetY = activeContainer.scrollTop + (activeContainer.clientHeight / 2);
-    const rows = activeContainer.querySelectorAll('tr[id*="-date-"]');
-
-    let bestRow = null;
-    let minDiff = Infinity;
-
-    for (let row of rows) {
-        const diff = Math.abs(row.offsetTop - targetY);
-        if (diff < minDiff) {
-            minDiff = diff;
-            bestRow = row;
-        }
-    }
-
-    if (bestRow) {
-        const match = bestRow.id.match(/date-(\d{4}-\d{2}-\d{2})/);
-        return match ? match[1] : null;
-    }
-
-    return null;
-}
 
 function scrollToDate(date, highlight = true) {
-    const iso = toISODate(date);
+    const prefix = getActivePrefix();
+    const container = getActiveContainer();
+    if (!prefix || !container) return;
 
-    const activeTab = document.querySelector('.tab-content.active');
-    if (!activeTab) return;
+    // Se o ano da data não estiver na tabela, renderiza
+    const el = ensureDateRendered(prefix, date);
+    if (!el) return;
 
-    let prefix = '';
-    if (activeTab.id === 'puma') prefix = 'puma';
-    else if (activeTab.id === 'monte-alegre') prefix = 'ma';
-    else if (activeTab.id === 'comparar') prefix = 'compare';
+    // Centraliza a linha na tela
+    container.scrollTop = el.offsetTop - (container.clientHeight / 2) + (el.clientHeight / 2);
 
-    const el = document.getElementById(`${prefix}-date-${iso}`);
-
-    // Pegamos o container que tem a barra de rolagem
-    const container = activeTab.querySelector('.table-container');
-
-    if (el && container) {
-        // --- CÁLCULO MANUAL (Substitui o scrollIntoView) ---
-        // Pega a posição da linha (offsetTop)
-        // Subtrai metade da altura da tela (container.clientHeight / 2)
-        // Soma metade da altura da linha (el.clientHeight / 2) para centralizar perfeito
-        const scrollPosition = el.offsetTop - (container.clientHeight / 2) + (el.clientHeight / 2);
-
-        // Aplica o scroll instantaneamente
-        container.scrollTop = scrollPosition;
-
-        if (highlight) {
-            // Se for para destacar, remove a classe antiga e adiciona novamente para reiniciar animação
-            el.classList.remove('highlight-flash');
-            void el.offsetWidth; // Truque para reiniciar animação CSS
-            el.classList.add('highlight-flash');
-
-            // Remove a classe depois de 2.5s
-            setTimeout(() => el.classList.remove('highlight-flash'), 2500);
-        }
+    if (highlight) {
+        // Reinicia a animação de destaque
+        el.classList.remove('highlight-flash');
+        void el.offsetWidth;
+        el.classList.add('highlight-flash');
+        el.addEventListener('animationend', () => el.classList.remove('highlight-flash'), { once: true });
     }
 }
 
 function goToToday() {
     globalCurrentDate = new Date(TODAY);
-    updateSelectors();
     renderAll();
-    setTimeout(() => scrollToDate(TODAY), 100);
-}
-
-function jumpToDate() {
-    const y = parseInt(document.getElementById('globalYear').value);
-    const m = parseInt(document.getElementById('globalMonth').value);
-
-    if (y !== globalCurrentDate.getFullYear()) {
-        globalCurrentDate.setFullYear(y);
-        renderAll();
-    }
-    setTimeout(() => {
-        scrollToDate(new Date(y, m, 1));
-    }, 100);
-}
-
-function updateSelectors() {
-    const m = document.getElementById('globalMonth');
-    const y = document.getElementById('globalYear');
-    if (m && y) {
-        m.value = globalCurrentDate.getMonth();
-        y.value = globalCurrentDate.getFullYear();
-    }
+    scrollToDate(TODAY);
 }
 
 function updateTabSlider() {
     const activeBtn = document.querySelector('.tab-button.active');
     const slider = document.querySelector('.tab-slider');
-
     if (activeBtn && slider) {
         slider.style.width = `${activeBtn.offsetWidth}px`;
         slider.style.left = `${activeBtn.offsetLeft}px`;
     }
 }
 
-// Troca de Aba
-function openTab(e, nm) {
-    // 1. ANTES DE TROCAR: Captura a posição visual exata da aba ATUAL
-    const activeTab = document.querySelector('.tab-content.active');
-    let savedIso = null;
-    let savedOffset = 0;
+// Troca de aba, mantendo a mesma data na tela
+function openTab(nm) {
+    const anchor = getScrollAnchor(getActiveContainer());
 
-    if (activeTab) {
-        const container = activeTab.querySelector('.table-container');
-        if (container) {
-            const rows = container.querySelectorAll('tr[id*="date-"]');
-            for (let row of rows) {
-                const relativeTop = row.offsetTop - container.scrollTop;
-                // Pega a primeira linha que está visível na tela
-                if (relativeTop >= 0 && relativeTop < container.clientHeight) {
-                    const match = row.id.match(/date-(\d{4}-\d{2}-\d{2})/);
-                    if (match) {
-                        savedIso = match[1];
-                        savedOffset = relativeTop;
-                        break;
-                    }
-                }
-            }
-        }
-    }
-
-    // 2. TROCA DE ABAS (Visual)
-    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-    document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
-
-    if (e && e.currentTarget) e.currentTarget.classList.add('active');
-    else {
-        const btnId = nm === 'puma' ? 'btn-puma' : (nm === 'monte-alegre' ? 'btn-ma' : 'btn-comparar');
-        const btn = document.getElementById(btnId);
-        if (btn) btn.classList.add('active');
-    }
-
-    const newTab = document.getElementById(nm);
-    newTab.classList.add('active');
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.toggle('active', c.id === nm));
+    document.querySelectorAll('.tab-button').forEach(b => b.classList.toggle('active', b.id === TAB_BUTTON[nm]));
     updateTabSlider();
 
-    // Lógica do botão flutuante e Renderização Inicial da Comparação
-    const fabCompare = document.getElementById('fab-compare');
-    if (nm === 'comparar') {
-        updateCompareHeaders();
-        // SÓ renderiza o padrão se NÃO tivermos uma data salva para sincronizar.
-        // Se tiver savedIso, deixamos a lógica de sincronização (passo 3) cuidar disso para não piscar a tela.
-        if (!savedIso) {
-            renderTableCompare();
-        }
-        if (fabCompare) fabCompare.style.display = 'flex';
-    } else {
-        if (fabCompare) fabCompare.style.display = 'none';
-    }
+    const prefix = TAB_PREFIX[nm];
+    const fabCompare = byId('fab-compare');
+    if (fabCompare) fabCompare.style.display = prefix === 'compare' ? 'flex' : 'none';
 
-    // 3. SINCRONIZAÇÃO INTELIGENTE (Agora funciona para TODAS as abas)
-    if (savedIso) {
-        const targetYear = parseInt(savedIso.split('-')[0]);
-
-        let prefix = '';
-        let targetBody = null;
-        let fn = null;
-        let teams = null;
-
-        // Configura as variáveis dependendo da aba de destino
-        if (nm === 'puma') {
-            prefix = 'puma';
-            targetBody = document.getElementById('puma-table-body');
-            fn = getPumaShift;
-            teams = ['A', 'B', 'C', 'D', 'E'];
-        } else if (nm === 'monte-alegre') {
-            prefix = 'ma';
-            targetBody = document.getElementById('ma-table-body');
-            fn = getMaShift;
-            teams = ['A', 'B', 'C', 'D', 'E'];
-        } else if (nm === 'comparar') {
-            // Configuração Especial para Comparar
-            prefix = 'compare';
-            targetBody = document.getElementById('compare-table-body');
-            fn = null; // Comparação não usa função única, usa o array de objetos
-
-            // Pega os valores atuais dos selects para montar a tabela correta
-            const t1 = document.getElementById('compareTabela1').value;
-            const l1 = document.getElementById('compareLetra1').value;
-            const t2 = document.getElementById('compareTabela2').value;
-            const l2 = document.getElementById('compareLetra2').value;
-            teams = [{ tabela: t1, letra: l1 }, { tabela: t2, letra: l2 }];
-        }
-
-        if (targetBody) {
-            let targetRow = document.getElementById(`${prefix}-date-${savedIso}`);
-
-            // SE A DATA NÃO EXISTE (ou se é a aba comparar precisando renderizar o ano certo)
-            if (!targetRow) {
-                targetBody.innerHTML = '';
-
-                // Atualiza variáveis globais de scroll
-                lastRenderedYear = targetYear;
-                firstRenderedYear = targetYear;
-
-                // Cria o ano específico
-                const frag = createYearFragment(targetYear, fn, teams, prefix);
-                targetBody.appendChild(frag);
-
-                // Tenta pegar a linha novamente
-                targetRow = document.getElementById(`${prefix}-date-${savedIso}`);
-            }
-
-            // Aplica a rolagem exata
-            if (targetRow) {
-                const newContainer = newTab.querySelector('.table-container');
-                setTimeout(() => {
-                    newContainer.scrollTop = targetRow.offsetTop - savedOffset;
-                }, 0);
-            }
-        }
+    if (anchor && ensureDateRendered(prefix, isoToDate(anchor.iso))) {
+        restoreScrollAnchor(getActiveContainer(), prefix, anchor);
     }
 }
+
+// Ao ir para Ajustes a tabela fica escondida e perde a rolagem; guardamos a data para voltar nela
+let homeAnchor = null;
 
 function switchView(viewName) {
-    const home = document.getElementById('home-view');
-    const settings = document.getElementById('settings-view');
-    const navButtons = document.querySelectorAll('.nav-item');
-    const fabContainer = document.getElementById('fab-container');
+    const home = byId('home-view');
+    const settings = byId('settings-view');
+    const fabContainer = byId('fab-container');
+    const showHome = viewName === 'home';
 
-    home.style.display = 'none';
-    settings.style.display = 'none';
-    navButtons.forEach(btn => btn.classList.remove('active'));
+    if (!showHome && home.style.display !== 'none') {
+        homeAnchor = getScrollAnchor(getActiveContainer());
+    }
 
-    if (viewName === 'home') {
-        home.style.display = 'block';
-        navButtons[0].classList.add('active');
-        if (fabContainer) fabContainer.style.display = 'block';
-    } else {
-        settings.style.display = 'block';
-        navButtons[1].classList.add('active');
-        if (fabContainer) fabContainer.style.display = 'none';
+    home.style.display = showHome ? '' : 'none';
+    settings.style.display = showHome ? 'none' : '';
+    byId('nav-home').classList.toggle('active', showHome);
+    byId('nav-settings').classList.toggle('active', !showHome);
+    if (fabContainer) fabContainer.style.display = showHome ? '' : 'none';
+
+    if (showHome) {
+        updateTabSlider();
+        const prefix = getActivePrefix();
+        if (homeAnchor && prefix && ensureDateRendered(prefix, isoToDate(homeAnchor.iso))) {
+            restoreScrollAnchor(getActiveContainer(), prefix, homeAnchor);
+        }
     }
 }
 
 // ============================================================================
-// 6. PERSISTÊNCIA E INICIALIZAÇÃO
+// 8. AJUSTES (Minha turma, Tema) E INICIALIZAÇÃO
 // ============================================================================
 
-const STORAGE_KEYS = ['globalMonth', 'globalYear', 'compareTabela1', 'compareLetra1', 'compareTabela2', 'compareLetra2'];
-
-function setupAutoSave() {
-    STORAGE_KEYS.forEach(id => {
-        const el = document.getElementById(id);
-        if (el) {
-            el.addEventListener('change', () => localStorage.setItem(id, el.value));
-        }
-    });
+function applyTheme(value) {
+    if (value === 'light' || value === 'dark') document.documentElement.setAttribute('data-theme', value);
+    else document.documentElement.removeAttribute('data-theme');
 }
 
-function loadSavedSettings() {
-    STORAGE_KEYS.forEach(id => {
-        const savedValue = localStorage.getItem(id);
-        const el = document.getElementById(id);
-        if (savedValue && el) el.value = savedValue;
-    });
-
-    const savedM = localStorage.getItem('globalMonth');
-    const savedY = localStorage.getItem('globalYear');
-    if (savedM !== null && savedY !== null) {
-        globalCurrentDate.setMonth(parseInt(savedM));
-        globalCurrentDate.setFullYear(parseInt(savedY));
+function setupSettings() {
+    // --- Minha turma ---
+    const teamSel = byId('setting-my-team');
+    if (teamSel) {
+        teamSel.add(new Option('Nenhuma', ''));
+        Object.entries(TABLE_NAMES).forEach(([tabela, name]) => {
+            const group = document.createElement('optgroup');
+            group.label = name;
+            TEAMS.forEach(letra => group.appendChild(new Option(`${TABLE_LABELS[tabela]} ${letra}`, `${tabela}:${letra}`)));
+            teamSel.appendChild(group);
+        });
+        teamSel.value = myTeam ? teamKey(myTeam) : '';
+        teamSel.onchange = () => {
+            myTeam = parseTeam(teamSel.value);
+            saveSetting('myTeam', myTeam ? teamKey(myTeam) : '');
+            renderHeaders();
+            ['puma', 'ma', 'compare'].forEach(rerenderKeepingRange);
+        };
     }
-}
 
-function updateCompareLetras() {
-    ['compareLetra1', 'compareLetra2'].forEach(id => {
-        const sel = document.getElementById(id);
-        if (sel && sel.options.length === 0) {
-            ['A', 'B', 'C', 'D', 'E'].forEach(l => sel.add(new Option(l, l)));
-        }
-    });
+    // --- Tema ---
+    const themeSel = byId('setting-theme');
+    if (themeSel) {
+        const saved = loadSetting('theme', 'auto');
+        themeSel.value = ['light', 'dark'].includes(saved) ? saved : 'auto';
+        themeSel.onchange = () => {
+            saveSetting('theme', themeSel.value);
+            applyTheme(themeSel.value);
+        };
+    }
 }
 
 async function hardReset() {
@@ -769,70 +731,36 @@ async function hardReset() {
         const keys = await caches.keys();
         for (const key of keys) await caches.delete(key);
     }
-    localStorage.clear();
-    window.location.reload(true);
+    try { localStorage.clear(); } catch (e) { /* ignora */ }
+    window.location.reload();
 }
 
-// --- FUNÇÃO MAIN ---
 function init() {
-    // 1. Configuração dos Selects (Mês/Ano)
-    const mSel = document.getElementById('globalMonth');
-    const ySel = document.getElementById('globalYear');
-    if (mSel && ySel) {
-        // Limpa opções antigas para não duplicar se o init rodar 2x
-        mSel.innerHTML = '';
-        ySel.innerHTML = '';
+    myTeam = parseTeam(loadSetting('myTeam', ''));
+    compareSources = loadCompareSources();
 
-        MONTH_NAMES.forEach((n, i) => mSel.add(new Option(n, i)));
-        for (let y = 2024; y <= 2030; y++) ySel.add(new Option(y, y));
-    }
-
-    // 2. Configuração dos Selects de Comparação
-    const cTab1 = document.getElementById('compareTabela1');
-    const cTab2 = document.getElementById('compareTabela2');
-    [cTab1, cTab2].forEach(s => {
-        if (s) {
-            s.innerHTML = ''; // Limpa antes de adicionar
-            s.add(new Option('Turno PUMA', 'puma'));
-            s.add(new Option('Turno Monte Alegre', 'ma'));
-        }
-    });
-
-    updateCompareLetras();
-    loadSavedSettings();
-    updateCompareHeaders();
-    setupAutoSave();
-
+    setupSettings();
+    renderHeaders();
     renderAll();
-    updateSelectors();
     setupInfiniteScroll();
 
-    // ===================================================
-    // CORREÇÃO AQUI: Adicionando os cliques via JS e Iniciando
-    // ===================================================
+    Object.entries(TAB_BUTTON).forEach(([tab, btnId]) => {
+        const btn = byId(btnId);
+        if (btn) btn.addEventListener('click', () => openTab(tab));
+    });
 
-    // Pegamos os botões pelos IDs novos que você colocou no HTML
-    const btnPuma = document.getElementById('btn-puma');
-    const btnMa = document.getElementById('btn-ma');
-    const btnCompare = document.getElementById('btn-comparar');
+    openTab('puma');
+    scrollToDate(TODAY, false);
 
-    // Adicionamos os eventos (Ouvintes)
-    if (btnPuma) btnPuma.addEventListener('click', (e) => openTab(e, 'puma'));
-    if (btnMa) btnMa.addEventListener('click', (e) => openTab(e, 'monte-alegre'));
-    if (btnCompare) btnCompare.addEventListener('click', (e) => openTab(e, 'comparar'));
-
-    // AUTO-START: Clicamos no botão PUMA para abrir a primeira aba
-    // Antes o código buscava por 'onclick', agora usamos a variável direta
-    if (btnPuma) {
-        btnPuma.click();
+    // A fonte Inter muda a altura das linhas quando termina de carregar: centraliza de novo em "hoje"
+    if (document.fonts && document.fonts.ready) {
+        document.fonts.ready.then(() => {
+            updateTabSlider();
+            scrollToDate(TODAY);
+        });
     }
-
-    setTimeout(() => {
-        goToToday();
-        updateTabSlider();
-    }, 500);
 
     window.addEventListener('resize', updateTabSlider);
 }
 
-window.onload = init;
+init();

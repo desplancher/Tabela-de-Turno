@@ -1,22 +1,131 @@
-﻿:root {
-    /* --- Cores Gerais --- */
-    --bg-color: #f4f7f6;
-    --text-color: #1f2937;
-    --border-color: #ddd;
+﻿/* ===================================================
+   CORES (TEMA CLARO E ESCURO)
+   Todas as cores do app ficam aqui. O tema escuro só troca os valores.
+   =================================================== */
+:root {
+    color-scheme: light;
+    /* --- Gerais --- */
+    --bg: #f4f7f6;
+    --surface: #ffffff;
+    --surface-2: #e5e7eb;
+    --text: #1f2937;
+    --text-muted: #6b7280;
+    --text-subtle: #9ca3af;
+    --border: #cccccc;
+    --border-soft: #eeeeee;
+    --shadow: rgba(0, 0, 0, 0.1);
+    --accent: #1B5E20;
+    --accent-text: #ffffff;
     /* --- Cabeçalhos --- */
-    --header-bg: #1B5E20;
     --header-text: #C8E6C9;
-    --table-header-bg: #333;
+    --puma-header: #004D40;
+    --ma-header: #1B5E20;
+    --compare-header: #3e2723;
+    --settings-header: #455A64;
+    --table-header-bg: #333333;
     --table-header-text: #f0f0f0;
     /* --- Tabela --- */
-    --stripe-color: #f9f9f9;
-    --weekend-color: #d9534f;
-    --holiday-color: #d9534f;
-    /* --- Turnos (PUMA) --- */
-    --puma-f-color: #00B050;
-    --puma-0-color: #0070C0;
-    --puma-8-color: #E36C0A;
-    --puma-16-color: #5A2D82;
+    --stripe: #f9f9f9;
+    --hover: #f0f9ff;
+    --month-bg: #eceff1;
+    --month-text: #37474f;
+    --month-border: #cfd8dc;
+    --holiday: #d32f2f;
+    --today-bg: #fff9c4;
+    --today-hover: #fff59d;
+    --today-text: #000000;
+    --flash: #ffeb3b;
+    --my-team-bg: rgba(27, 94, 32, 0.07);
+    /* --- Folgas em comum (Comparar) --- */
+    --folga-bg: #c8f2d4;
+    --folga-fds-bg: #7fdc9b;
+    --folga-text: #0b3d1c;
+    /* --- Turnos --- */
+    --shift-f: #00B050;
+    --shift-0: #0070C0;
+    --shift-8: #E36C0A;
+    --shift-16: #5A2D82;
+    /* --- Formulários --- */
+    --input-bg: #f9f9f9;
+    --danger: #d32f2f;
+    --danger-active: #b71c1c;
+}
+
+/* Tema escuro: escolhido nos Ajustes ou automático pelo sistema */
+:root[data-theme="dark"] {
+    color-scheme: dark;
+    --bg: #0f1412;
+    --surface: #1a1f1d;
+    --surface-2: #242a27;
+    --text: #e5e7eb;
+    --text-muted: #a1a8b0;
+    --text-subtle: #7b838c;
+    --border: #3a403d;
+    --border-soft: #2c322f;
+    --shadow: rgba(0, 0, 0, 0.5);
+    --accent: #2E7D32;
+    --header-text: #C8E6C9;
+    --table-header-bg: #0b0e0d;
+    --stripe: #1f2522;
+    --hover: #26302c;
+    --month-bg: #2a312e;
+    --month-text: #cfd8dc;
+    --month-border: #3a443f;
+    --holiday: #ff6b6b;
+    --today-bg: #4a4520;
+    --today-hover: #5a5426;
+    --today-text: #fff8c4;
+    --flash: #8a7a00;
+    --my-team-bg: rgba(129, 199, 132, 0.1);
+    --folga-bg: #173d25;
+    --folga-fds-bg: #22663a;
+    --folga-text: #d7f7e1;
+    --shift-f: #34d17a;
+    --shift-0: #4aa3ff;
+    --shift-8: #ff9a4a;
+    --shift-16: #b98cff;
+    --input-bg: #242a27;
+    --danger: #c62828;
+    --danger-active: #8e0000;
+}
+
+@media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+        color-scheme: dark;
+        --bg: #0f1412;
+        --surface: #1a1f1d;
+        --surface-2: #242a27;
+        --text: #e5e7eb;
+        --text-muted: #a1a8b0;
+        --text-subtle: #7b838c;
+        --border: #3a403d;
+        --border-soft: #2c322f;
+        --shadow: rgba(0, 0, 0, 0.5);
+        --accent: #2E7D32;
+        --header-text: #C8E6C9;
+        --table-header-bg: #0b0e0d;
+        --stripe: #1f2522;
+        --hover: #26302c;
+        --month-bg: #2a312e;
+        --month-text: #cfd8dc;
+        --month-border: #3a443f;
+        --holiday: #ff6b6b;
+        --today-bg: #4a4520;
+        --today-hover: #5a5426;
+        --today-text: #fff8c4;
+        --flash: #8a7a00;
+        --my-team-bg: rgba(129, 199, 132, 0.1);
+        --folga-bg: #173d25;
+        --folga-fds-bg: #22663a;
+        --folga-text: #d7f7e1;
+        --shift-f: #34d17a;
+        --shift-0: #4aa3ff;
+        --shift-8: #ff9a4a;
+        --shift-16: #b98cff;
+        --input-bg: #242a27;
+        --danger: #c62828;
+        --danger-active: #8e0000;
+    }
 }
 
 /* ===================================================
@@ -30,11 +139,11 @@
 
 body {
     font-family: 'Inter', sans-serif;
-    background-color: var(--bg-color);
-    color: var(--text-color);
+    background-color: var(--bg);
+    color: var(--text);
     display: flex;
     justify-content: center;
-    /* CORREÇÃO DE LAYOUT: Ocupa toda a tela e trava rolagem externa */
+    /* Ocupa toda a tela e trava a rolagem externa (quem rola é a tabela) */
     height: 100vh;
     overflow: hidden;
     padding: 20px;
@@ -46,34 +155,37 @@ h2 {
     text-align: center;
     color: var(--header-text);
     text-transform: uppercase;
-    flex-shrink: 0; /* Garante que o título não amasse */
+    flex-shrink: 0;
+}
+
+button, select {
+    font-family: inherit;
+    color: inherit;
 }
 
 /* ===================================================
-   LAYOUT E ABAS (FLEXBOX)
+   LAYOUT E ABAS
    =================================================== */
 .container {
     width: 100%;
     max-width: 950px;
-    background: #fff;
+    background: var(--surface);
     border-radius: 12px;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    box-shadow: 0 4px 6px var(--shadow);
     overflow: hidden;
-    /* CORREÇÃO: Container flexível que ocupa a altura total */
     height: 100%;
     display: flex;
     flex-direction: column;
 }
 
-/* Container das abas */
 .tab-container {
     display: flex;
-    background-color: #e5e7eb;
+    background-color: var(--surface-2);
     position: sticky;
     top: 0;
     z-index: 100;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    flex-shrink: 0; /* Não deixa as abas encolherem */
+    box-shadow: 0 2px 4px var(--shadow);
+    flex-shrink: 0;
 }
 
 .tab-button {
@@ -82,7 +194,7 @@ h2 {
     border: none;
     cursor: pointer;
     background: transparent;
-    color: #4b5563;
+    color: var(--text-muted);
     font-weight: 500;
     position: relative;
     outline: none;
@@ -90,42 +202,69 @@ h2 {
 }
 
     .tab-button.active {
-        background: #fff;
-        color: #111827;
+        background: var(--surface);
+        color: var(--text);
     }
 
-/* A Linha Deslizante */
 .tab-slider {
     position: absolute;
     bottom: 0;
     left: 0;
     height: 4px;
-    background-color: var(--header-bg);
+    background-color: var(--accent);
     transition: all 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
     width: 0;
 }
 
-/* Conteúdo da Aba */
 .tab-content {
     display: none;
-    /* CORREÇÃO: Flexível para preencher o espaço */
     flex-direction: column;
     flex: 1;
     overflow: hidden;
-    padding-bottom: 0;
 }
 
     .tab-content.active {
-        /* CORREÇÃO: Usamos flex em vez de block para alinhar a altura */
         display: flex;
     }
+
+/* ===================================================
+   LEGENDAS
+   =================================================== */
+.legend {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 4px 14px;
+    padding: 6px 10px;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    background: var(--surface);
+    border-bottom: 1px solid var(--border-soft);
+    flex-shrink: 0;
+}
+
+    .legend b {
+        font-weight: 800;
+        margin-right: 2px;
+    }
+
+.swatch {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    border-radius: 3px;
+    vertical-align: -2px;
+    margin-right: 2px;
+    border: 1px solid var(--border);
+}
+
+.swatch-comum { background: var(--folga-bg); }
+.swatch-fds { background: var(--folga-fds-bg); }
 
 /* ===================================================
    TABELAS
    =================================================== */
 .table-container {
-    /* CORREÇÃO: Remove altura fixa e usa flex: 1 para ocupar tudo */
-    height: auto;
     flex: 1;
     overflow-y: auto;
     overflow-x: hidden;
@@ -140,20 +279,20 @@ table {
 }
 
 th, td {
-    border: 1px solid #ccc;
+    border: 1px solid var(--border);
     padding: 10px;
 }
 
 tbody tr:nth-child(even) {
-    background: var(--stripe-color);
+    background: var(--stripe);
 }
 
 tbody tr:hover {
-    background: #f0f9ff;
+    background: var(--hover);
     cursor: pointer;
 }
 
-/* --- Cabeçalho Fixo --- */
+/* --- Cabeçalho fixo --- */
 thead th {
     position: sticky;
     top: 0;
@@ -161,112 +300,126 @@ thead th {
     background-color: var(--table-header-bg);
     color: var(--table-header-text);
     border: none;
-    transform: translateZ(10);
     background-clip: padding-box;
 }
 
     thead th::after {
         content: "";
         position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        border: 1px solid #ccc;
-        z-index: 100;
+        inset: 0;
+        border: 1px solid var(--border);
         pointer-events: none;
     }
 
-/* --- Cores Específicas --- */
+/* --- Cores específicas --- */
 .dia-feriado {
-    color: #d32f2f !important; /* Vermelho */
+    color: var(--holiday) !important;
     font-weight: 700;
 }
 
-/* Fim de semana (Domingo/Sábado): Pode manter vermelho ou mudar se quiser */
-.dia-dom, .dia-sab {
-    color: #d32f2f; /* Mantém vermelho ou mude para #333 se quiser só o feriado vermelho */
-    font-weight: 700;
-}
+.shift-f { color: var(--shift-f); }
+.shift-0 { color: var(--shift-0); }
+.shift-8 { color: var(--shift-8); }
+.shift-16 { color: var(--shift-16); }
 
-.shift-f {
-    color: var(--puma-f-color);
-}
-
-.shift-0 {
-    color: var(--puma-0-color);
-}
-
-.shift-8 {
-    color: var(--puma-8-color);
-}
-
-.shift-16 {
-    color: var(--puma-16-color);
-}
-
-.puma-header {
-    background-color: #004D40;
-}
-
-.ma-header {
-    background-color: #1B5E20;
-}
-
-.compare-header {
-    background-color: #3e2723;
-}
+.puma-header { background-color: var(--puma-header); }
+.ma-header { background-color: var(--ma-header); }
+.compare-header { background-color: var(--compare-header); }
+.settings-header { background-color: var(--settings-header); }
 
 .month-separator td {
-    background-color: #eceff1;
-    color: #37474f;
+    background-color: var(--month-bg);
+    color: var(--month-text);
     font-weight: 800;
     text-align: left;
     padding: 10px;
     text-transform: uppercase;
-    border-top: 2px solid #cfd8dc;
+    border-top: 2px solid var(--month-border);
     font-size: 0.9rem;
 }
 
+/* --- Minha turma: coluna destacada --- */
+td.my-team-col {
+    background-color: var(--my-team-bg);
+    box-shadow: inset 2px 0 0 var(--accent), inset -2px 0 0 var(--accent);
+}
+
+/* --- Folgas em comum (aba Comparar) --- */
+tr.folga-comum td {
+    background-color: var(--folga-bg);
+    color: var(--folga-text);
+}
+
+tr.folga-comum.folga-fds td {
+    background-color: var(--folga-fds-bg);
+    font-weight: 800;
+}
+
+    tr.folga-comum.folga-fds td.dia-feriado {
+        color: var(--holiday) !important;
+    }
+
+/* --- Hoje --- */
+tr.row-today td {
+    background-color: var(--today-bg);
+    color: var(--today-text);
+}
+
+tbody tr.row-today:hover td {
+    background-color: var(--today-hover);
+}
+
+@keyframes flash-row {
+    0% { background-color: var(--flash); }
+    100% { background-color: transparent; }
+}
+
+.highlight-flash td {
+    animation: flash-row 2s ease-out;
+}
+
 /* ===================================================
-   COMPARAÇÃO
+   COMPARAÇÃO: PRÓXIMAS FOLGAS JUNTAS
    =================================================== */
-.compare-controls {
+.next-folgas {
     display: flex;
-    align-items: flex-end;
-    flex-wrap: wrap;
-    gap: 15px;
-    padding: 5px;
-    background-color: #fff;
-    border-radius: 8px;
-    border: 1px solid var(--border-color);
-    flex-shrink: 0; /* Não deixa os controles encolherem */
+    align-items: center;
+    gap: 6px;
+    padding: 8px 10px;
+    overflow-x: auto;
+    flex-shrink: 0;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border-soft);
+    scrollbar-width: thin;
 }
 
-.compare-group {
-    flex: 1;
-    display: flex;
-    gap: 10px;
-    background: #f9f9f9;
-    padding: 5px;
-    border-radius: 8px;
+.next-label {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    white-space: nowrap;
 }
 
-.field-item {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
+.next-chip {
+    flex-shrink: 0;
+    border: 1px solid var(--border);
+    background: var(--folga-bg);
+    color: var(--folga-text);
+    border-radius: 999px;
+    padding: 4px 10px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
 }
 
-    .field-item label {
-        font-size: 0.8rem;
-        font-weight: 600;
-        color: #4b5563;
+    .next-chip.fds {
+        background: var(--folga-fds-bg);
+        font-weight: 800;
     }
 
 /* ===================================================
-   MENU INFERIOR (Bottom Nav)
+   MENU INFERIOR
    =================================================== */
 .bottom-nav {
     position: fixed;
@@ -274,13 +427,13 @@ thead th {
     left: 0;
     width: 100%;
     height: 65px;
-    background-color: #ffffff;
+    background-color: var(--surface);
     display: flex;
     justify-content: space-around;
     align-items: center;
-    box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+    box-shadow: 0 -2px 10px var(--shadow);
     z-index: 1000;
-    border-top: 1px solid #eee;
+    border-top: 1px solid var(--border-soft);
 }
 
 .nav-item {
@@ -290,7 +443,7 @@ thead th {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    color: #9ca3af;
+    color: var(--text-subtle);
     font-size: 0.75rem;
     font-weight: 500;
     cursor: pointer;
@@ -299,7 +452,7 @@ thead th {
 }
 
     .nav-item.active {
-        color: var(--header-bg);
+        color: var(--accent);
     }
 
 .nav-icon {
@@ -308,10 +461,38 @@ thead th {
 }
 
 /* ===================================================
-   BOTÕES E MODAL
+   AJUSTES
    =================================================== */
+.settings-body {
+    padding: 20px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+}
+
+.setting-item label {
+    display: block;
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 6px;
+}
+
+.setting-hint {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin-top: 6px;
+}
+
+.app-version {
+    font-size: 0.8rem;
+    color: var(--text-subtle);
+    text-align: center;
+}
+
 .btn-reset {
-    background-color: #d32f2f;
+    background-color: var(--danger);
     color: white;
     border: none;
     padding: 15px 20px;
@@ -320,30 +501,18 @@ thead th {
     font-size: 1rem;
     font-weight: bold;
     cursor: pointer;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    box-shadow: 0 2px 4px var(--shadow);
     transition: background 0.2s;
 }
 
     .btn-reset:active {
-        background-color: #b71c1c;
+        background-color: var(--danger-active);
         transform: scale(0.98);
     }
 
-@keyframes flash-row {
-    0% {
-        background-color: #ffeb3b;
-    }
-
-    100% {
-        background-color: inherit;
-    }
-}
-
-.highlight-flash {
-    animation: flash-row 2s ease-out;
-}
-
-/* --- Botões Flutuantes (FAB) --- */
+/* ===================================================
+   BOTÕES FLUTUANTES (FAB)
+   =================================================== */
 #fab-container {
     z-index: 1000;
 }
@@ -355,7 +524,7 @@ thead th {
     width: 56px;
     height: 56px;
     border-radius: 50%;
-    background-color: var(--header-bg);
+    background-color: var(--accent);
     color: white;
     border: none;
     box-shadow: 0 4px 10px rgba(0,0,0,0.3);
@@ -378,9 +547,9 @@ thead th {
     width: 40px;
     height: 40px;
     border-radius: 50%;
-    background-color: white;
-    color: var(--header-bg);
-    border: 1px solid #ddd;
+    background-color: var(--surface);
+    color: var(--accent);
+    border: 1px solid var(--border);
     box-shadow: 0 2px 5px rgba(0,0,0,0.2);
     font-size: 1.2rem;
     display: flex;
@@ -391,7 +560,7 @@ thead th {
 }
 
     .fab-mini:active {
-        background-color: #f0f0f0;
+        background-color: var(--surface-2);
     }
 
 #fab-today {
@@ -400,21 +569,14 @@ thead th {
 
 #fab-compare {
     bottom: 210px;
-    display: none;
 }
 
-#settings-view .fab-main,
-#settings-view .fab-mini {
-    display: none !important;
-}
-
-/* --- Modal --- */
+/* ===================================================
+   MODAIS
+   =================================================== */
 .modal-overlay {
     position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
+    inset: 0;
     background-color: rgba(0, 0, 0, 0.5);
     z-index: 2000;
     display: flex;
@@ -424,59 +586,53 @@ thead th {
 }
 
 .modal-content {
-    background: white;
+    background: var(--surface);
     width: 90%;
-    max-width: 350px;
+    max-width: 380px;
+    max-height: 90vh;
+    overflow-y: auto;
     border-radius: 12px;
     padding: 20px;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.3);
     animation: popIn 0.2s ease-out;
 }
 
 @keyframes popIn {
-    from {
-        transform: scale(0.8);
-        opacity: 0;
-    }
-
-    to {
-        transform: scale(1);
-        opacity: 1;
-    }
+    from { transform: scale(0.8); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
 }
 
 .modal-content h3 {
-    margin-top: 0;
-    color: var(--header-bg);
+    color: var(--accent);
     text-align: center;
-    margin-bottom: 20px;
+    margin-bottom: 12px;
 }
 
-.modal-body {
-    display: flex;
-    gap: 10px;
-    justify-content: space-between;
-    margin-bottom: 25px;
+:root[data-theme="dark"] .modal-content h3,
+:root[data-theme="dark"] .calendar-header {
+    color: #81c784;
 }
 
-.input-group {
-    display: flex;
-    flex-direction: column;
-    flex: 1;
-}
-
-    .input-group label {
-        font-size: 0.75rem;
-        color: #666;
-        margin-bottom: 4px;
-        font-weight: 600;
+@media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) .modal-content h3,
+    :root:not([data-theme="light"]) .calendar-header {
+        color: #81c784;
     }
+}
+
+.modal-hint {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    text-align: center;
+    margin-bottom: 16px;
+}
 
 .modal-select {
     padding: 8px;
-    border: 1px solid #ccc;
+    border: 1px solid var(--border);
     border-radius: 6px;
-    background: #f9f9f9;
+    background: var(--input-bg);
+    color: var(--text);
     font-size: 1rem;
     width: 100%;
 }
@@ -497,16 +653,95 @@ thead th {
 
 .btn-cancel {
     background: transparent;
-    color: #666;
+    color: var(--text-muted);
 }
 
 .btn-confirm {
-    background-color: var(--header-bg);
-    color: white;
+    background-color: var(--accent);
+    color: var(--accent-text);
 }
 
+.btn-full {
+    width: 100%;
+}
+
+/* --- Lista de turmas da comparação --- */
+.compare-sources {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+
+.source-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--surface-2);
+    padding: 8px;
+    border-radius: 8px;
+}
+
+.source-num {
+    font-weight: 800;
+    color: var(--text-muted);
+    width: 16px;
+    text-align: center;
+    flex-shrink: 0;
+}
+
+.source-row .modal-select {
+    flex: 1;
+    min-width: 0;
+}
+
+.source-row .select-letra {
+    flex: 0 0 64px;
+}
+
+.btn-remove {
+    flex-shrink: 0;
+    width: 34px;
+    height: 34px;
+    border: none;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--danger);
+    font-size: 1rem;
+    cursor: pointer;
+}
+
+    .btn-remove:disabled {
+        color: var(--text-subtle);
+        opacity: 0.4;
+        cursor: default;
+    }
+
+.btn-add {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 18px;
+    border: 1px dashed var(--border);
+    border-radius: 8px;
+    background: transparent;
+    color: var(--accent);
+    font-weight: 700;
+    cursor: pointer;
+}
+
+:root[data-theme="dark"] .btn-add { color: #81c784; }
+
+@media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) .btn-add { color: #81c784; }
+}
+
+    .btn-add:disabled {
+        color: var(--text-subtle);
+        cursor: default;
+    }
+
 /* ===================================================
-   CALENDÁRIO VISUAL
+   CALENDÁRIO
    =================================================== */
 .calendar-wrapper {
     width: 100%;
@@ -520,7 +755,7 @@ thead th {
     align-items: center;
     margin-bottom: 15px;
     font-weight: 700;
-    color: var(--header-bg);
+    color: var(--accent);
     text-transform: uppercase;
 }
 
@@ -528,50 +763,15 @@ thead th {
     background: none;
     border: none;
     font-size: 1.2rem;
-    color: #666;
+    color: var(--text-muted);
     cursor: pointer;
     padding: 5px 10px;
     border-radius: 4px;
 }
 
     .cal-nav-btn:hover {
-        background-color: #eee;
+        background-color: var(--surface-2);
     }
-
-.calendar-weekdays {
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    text-align: center;
-    font-size: 0.75rem;
-    color: #999;
-    font-weight: 600;
-    margin-bottom: 10px;
-}
-
-/* CORREÇÃO: Altura Fixa para o Modal */
-.calendar-content {
-    height: 260px; /* Altura fixa suficiente para 6 semanas */
-    overflow: hidden;
-}
-
-/* Grid de Dias */
-.days-grid {
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    /* CORREÇÃO: Força sempre 6 linhas para não pular tamanho */
-    grid-template-rows: repeat(6, 1fr);
-    gap: 5px;
-    text-align: center;
-}
-
-.row-today {
-    background-color: #fff9c4 !important; /* Amarelo bem suave */
-    color: #000; /* Garante texto preto para contraste */
-}
-
-tbody tr.row-today:hover {
-    background-color: #fff59d !important; /* Amarelo um pouco mais escuro ao passar o mouse */
-}
 
 .calendar-title-group {
     display: flex;
@@ -586,30 +786,79 @@ tbody tr.row-today:hover {
     transition: background 0.2s;
 }
 
-.calendar-day:hover {
-    background-color: #f0f0f0;
+    .cal-title-btn:hover {
+        background-color: var(--surface-2);
+    }
+
+.calendar-weekdays {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    text-align: center;
+    font-size: 0.75rem;
+    color: var(--text-subtle);
+    font-weight: 600;
+    margin-bottom: 10px;
 }
 
-.calendar-day.empty {
-    cursor: default;
-    pointer-events: none;
+/* Altura fixa para o modal não mudar de tamanho entre meses */
+.calendar-content {
+    height: 260px;
+    overflow: hidden;
 }
 
-.calendar-day.selected {
-    background-color: var(--header-bg);
-    color: white;
-    font-weight: bold;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+.days-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    grid-template-rows: repeat(6, 1fr); /* Sempre 6 semanas */
+    gap: 5px;
+    text-align: center;
 }
 
-.calendar-day.today:not(.selected) {
-    border: 1px solid var(--header-bg);
-    color: var(--header-bg);
-    font-weight: bold;
+.month-picker-grid,
+.year-picker-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-auto-rows: 1fr;
+    gap: 8px;
 }
+
+.calendar-day,
+.month-picker-item,
+.year-picker-item {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+    .calendar-day:hover,
+    .month-picker-item:hover,
+    .year-picker-item:hover {
+        background-color: var(--surface-2);
+    }
+
+    .calendar-day.empty {
+        cursor: default;
+        pointer-events: none;
+    }
+
+    .calendar-day.selected,
+    .month-picker-item.selected,
+    .year-picker-item.selected {
+        background-color: var(--accent);
+        color: white;
+        font-weight: bold;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    }
+
+    .calendar-day.today:not(.selected) {
+        border: 1px solid var(--accent);
+        font-weight: bold;
+    }
 
 /* ===================================================
-   RESPONSIVIDADE (MOBILE)
+   RESPONSIVIDADE (CELULAR)
    =================================================== */
 @media (max-width: 768px) {
     body {
@@ -618,32 +867,13 @@ tbody tr.row-today:hover {
     }
 
     h2 {
-        font-size: 1.2rem;
+        font-size: 1.1rem;
         padding: 5px;
     }
 
     .tab-button {
         padding: 8px;
         font-size: 0.9rem;
-    }
-
-    .controls-header {
-        flex-direction: column;
-        align-items: stretch;
-        padding: 3px;
-    }
-
-        .controls-header > div {
-            display: flex;
-            gap: 10px;
-            justify-content: space-between;
-        }
-
-    .controls-select, .controls-button {
-        flex: 1;
-        max-width: none;
-        font-size: 16px;
-        padding: 8px;
     }
 
     th, td {
@@ -657,18 +887,8 @@ tbody tr.row-today:hover {
         letter-spacing: 0.5px;
     }
 
-    .compare-controls {
-        flex-direction: column;
-        align-items: stretch;
-    }
-
-    .compare-group {
-        width: 100%;
-    }
-
-    #compareButton {
-        width: 100%;
-        margin-top: 10px;
-        padding: 12px;
+    .legend {
+        font-size: 0.7rem;
+        gap: 2px 10px;
     }
 }
